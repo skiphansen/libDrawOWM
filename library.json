@@ -1,0 +1,13 @@
+{
+  "$schema": "https://platformio.org",
+  "name": "libDrawOWM",
+  "version": "0.0.1",
+  "description": "A high-performance telemetry parsing engine for aerospace and automotive IoT applications.",
+  "keywords": "telemetry, can-bus, sensor, logging, esp32",
+  "license": "GPL",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skiphansen/libDrawOWM"
+  }
+}
+
