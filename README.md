@@ -8,6 +8,9 @@ OpenWeatherMap API.
 
 <img width="1265" height="845" alt="image" src="https://github.com/user-attachments/assets/a369f6de-06bc-40f8-95a8-dbbfd61dfe6b" />
 
+<img width="659" height="699" alt="image" src="https://github.com/user-attachments/assets/49ac2c3c-c850-4ec2-8616-9852a0bec047" />
+
+
 ## Why?
 
 I wanted to add support for weather from OpenWeatherMap to the [OpenEPaperLink](https://github.com/OpenEPaperLink/OpenEPaperLink/tree/master) project
