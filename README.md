@@ -24,7 +24,7 @@ uses the TFT_eSPI library to render screen images to transmission to the tags.
 
 1. Currently the library uses either [Bodmer's TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) or [Seeed's fork of TFT_eSPI](https://github.com/Seeed-Studio/Seeed_GFX) rather than 
 [ZinggJM's GxEPD2](https://github.com/ZinggJM/GxEPD2) as an interface to E-paper 
-displays.  Support for other libraries based on [https://github.com/adafruit/Adafruit-GFX-Library](https://github.com/adafruit/Adafruit-GFX-Library) can
+displays.  Support for other libraries based on [Adafruit's GFX-Library](https://github.com/adafruit/Adafruit-GFX-Library) can
 probably be added fairly easily.
 
 2. Most of the configuration preferences supported by the original project are 
