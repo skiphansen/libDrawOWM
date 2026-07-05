@@ -6,7 +6,7 @@ The original project was a complete implementation of ESP32 based E-Paper Weathe
 targeting a 7.5" E-Paper display using weather data is fetched from the 
 OpenWeatherMap API.
 
-<img src="https://raw.githubusercontent.com/lmarzen/esp32-weather-epd/main/showcase/assembled-demo-raleigh-front.jpg"/>
+<img width="1265" height="845" alt="image" src="https://github.com/user-attachments/assets/a369f6de-06bc-40f8-95a8-dbbfd61dfe6b" />
 
 ## Why?
 
