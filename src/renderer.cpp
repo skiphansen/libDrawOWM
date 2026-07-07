@@ -1125,14 +1125,16 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
          if(config.DisplayFormat == FORMAT_640X384) {
             TempX = 156 + 164 / 2 - 20;
             FeelsLikeX = 156 + 164 / 2 - 20;
+         // align feels like with high / low temps to better clear weather ICON
+            FeelsLikeY = 98 + 69 / 2 + 38 - 12 + 12;
          }
          else {
             TempX = 196 + 164 / 2 - 20;
             FeelsLikeX = 196 + 164 / 2;
+            FeelsLikeY = 98 + 69 / 2 + 12 + 17;
          }
          TempY = 196 / 2 + 69 / 2;
          UnitY = 196 / 2 - 69 / 2 + 20;
-         FeelsLikeY = 98 + 69 / 2 + 12 + 17;
          break;
    }
 
@@ -1159,7 +1161,12 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
              + String(static_cast<int>(std::round(FeelsLike)))
              + '\260';
    setFreeFont(ValueFont);
-   drawString(FeelsLikeX,FeelsLikeY, dataStr, CENTER);
+   if(config.DisplayFormat == FORMAT_640X384) {
+      drawString(getCursorX(),FeelsLikeY,dataStr,RIGHT);
+   }
+   else {
+      drawString(FeelsLikeX,FeelsLikeY,dataStr,CENTER);
+   }
 
    // line dividing top and bottom display areas
    // display.drawLine(0, 196, config.DisplayWidth - 1, 196, TFT_BLACK);
