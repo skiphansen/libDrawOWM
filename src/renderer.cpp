@@ -242,6 +242,7 @@ void DrawOWM::drawCurrentSunrise(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_sunrise_24x24;
@@ -252,10 +253,13 @@ void DrawOWM::drawCurrentSunrise(const owm_current_t &current)
         IconBitmap = wi_sunrise_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_sunrise,WI_SZ);
+#endif
 
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,IconBitmap,
                      WI_SZ,WI_SZ,TFT_BLACK);
-
+  FREE_BITMAP(IconBitmap);
   // labels
   setFreeFont(LabelFont);
   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_LDY + WI_DY * PosY, TXT_SUNRISE, LEFT);
@@ -278,6 +282,7 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
   int PosY = static_cast<int>(config.PosWind / 2);
   const unsigned char *IconBitmap = NULL;
 
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_strong_wind_24x24;
@@ -288,10 +293,14 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
         IconBitmap = wi_strong_wind_48x48;
         break;
   }
+  #else
+  IconBitmap = getBitmap(wi_strong_wind,WI_SZ);
+  #endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap, WI_SZ, WI_SZ, TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -384,6 +393,7 @@ void DrawOWM::drawCurrentUVI(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_day_sunny_24x24;
@@ -394,10 +404,14 @@ void DrawOWM::drawCurrentUVI(const owm_current_t &current)
         IconBitmap = wi_day_sunny_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_day_sunny,WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -450,6 +464,7 @@ void DrawOWM::drawCurrentAirQuality(const owm_resp_air_pollution_t &owm_air_poll
   const GFXfont *TempFont;
 
     // icons
+#ifndef TTF_PATH_OWM_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = air_filter_24x24;
@@ -460,10 +475,14 @@ void DrawOWM::drawCurrentAirQuality(const owm_resp_air_pollution_t &owm_air_poll
         IconBitmap = air_filter_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(air_filter,WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -536,6 +555,7 @@ void DrawOWM::drawCurrentInTemp(float inTemp)
   const unsigned char *IconBitmap = NULL;
 
     // icons
+#ifndef TTF_PATH_OWM_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = house_thermometer_24x24;
@@ -546,10 +566,14 @@ void DrawOWM::drawCurrentInTemp(float inTemp)
         IconBitmap = house_thermometer_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(house_thermometer,WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -586,6 +610,7 @@ void DrawOWM::drawCurrentSunset(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
   // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_sunset_24x24;
@@ -596,8 +621,12 @@ void DrawOWM::drawCurrentSunset(const owm_current_t &current)
         IconBitmap = wi_sunset_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_sunset,WI_SZ);
+#endif
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,IconBitmap,
                      WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -623,6 +652,7 @@ void DrawOWM::drawCurrentHumidity(const owm_current_t &current)
   const GFXfont *TempFont;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_humidity_24x24;
@@ -633,10 +663,14 @@ void DrawOWM::drawCurrentHumidity(const owm_current_t &current)
         IconBitmap = wi_humidity_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_humidity,WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   TempFont = config.DisplayWidth >= 640 ? &FONT_7pt8b : &FONT_6pt8b;
@@ -663,6 +697,7 @@ void DrawOWM::drawCurrentPressure(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_barometer_24x24;
@@ -673,9 +708,13 @@ void DrawOWM::drawCurrentPressure(const owm_current_t &current)
         IconBitmap = wi_barometer_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_barometer,WI_SZ);
+#endif
   //  icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   //  labels
   setFreeFont(LabelFont);
@@ -753,6 +792,7 @@ void DrawOWM::drawCurrentVisibility(const owm_current_t &current)
   const GFXfont *TempFont;
 
     // icons
+#ifndef TTF_PATH_OWM_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = visibility_icon_24x24;
@@ -763,10 +803,14 @@ void DrawOWM::drawCurrentVisibility(const owm_current_t &current)
         IconBitmap = visibility_icon_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(visibility_icon,WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -817,6 +861,7 @@ void DrawOWM::drawCurrentInHumidity(float inHumidity)
   const GFXfont *TempFont;
 
     // icons
+#ifndef TTF_PATH_OWM_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = house_humidity_24x24;
@@ -827,10 +872,14 @@ void DrawOWM::drawCurrentInHumidity(float inHumidity)
         IconBitmap = house_humidity_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(house_humidity,WI_SZ);
+#endif
 
   // current weather data icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // current weather data labels
   setFreeFont(LabelFont);
@@ -863,6 +912,7 @@ void DrawOWM::drawCurrentMoonrise(const owm_daily_t &today)
   const unsigned char *IconBitmap = NULL;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_moonrise_24x24;
@@ -873,10 +923,14 @@ void DrawOWM::drawCurrentMoonrise(const owm_daily_t &today)
         IconBitmap = wi_moonrise_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_moonrise,WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -901,6 +955,7 @@ void DrawOWM::drawCurrentMoonset(const owm_daily_t &today)
   const unsigned char *IconBitmap = NULL;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_moonset_24x24;
@@ -911,9 +966,13 @@ void DrawOWM::drawCurrentMoonset(const owm_daily_t &today)
         IconBitmap = wi_moonset_48x48;
         break;
   }
+#else
+  IconBitmap = getBitmap(wi_moonset,WI_SZ);
+#endif
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                       IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
 
   // labels
   setFreeFont(LabelFont);
@@ -939,6 +998,7 @@ void DrawOWM::drawCurrentMoonphase(const owm_daily_t &daily)
   const GFXfont *TempFont;
 
     // icons
+#ifndef TTF_PATH_WEATHER_ICONS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = getMoonPhaseBitmap24(daily);
@@ -949,10 +1009,15 @@ void DrawOWM::drawCurrentMoonphase(const owm_daily_t &daily)
         IconBitmap = getMoonPhaseBitmap48(daily);
         break;
   }
+#else
+  IconBitmap = getBitmap(getMoonPhaseIcon(daily),WI_SZ);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
+
   // labels
   setFreeFont(LabelFont);
   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_LDY + WI_DY * PosY, TXT_MOONPHASE, LEFT);
@@ -1000,26 +1065,37 @@ void DrawOWM::drawCurrentDewpoint(const owm_current_t &current)
     // icons
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
+        WI_SZ1 = 16;
+#ifndef TTF_PATH_WEATHER_ICONS
         IconBitmap = wi_thermometer_24x24;
         IconBitmap1 = wi_raindrops_16x16;
-        WI_SZ1 = 16;
+#endif
         break;
 
      case FORMAT_640X384:
      case FORMAT_800X480:
+        WI_SZ1 = 24;
+#ifndef TTF_PATH_WEATHER_ICONS
         IconBitmap = wi_thermometer_48x48;
         IconBitmap1 = wi_raindrops_24x24;
-        WI_SZ1 = 24;
+#endif
         break;
   }
+
+#ifdef TTF_PATH_WEATHER_ICONS
+  IconBitmap = getBitmap(wi_thermometer,WI_SZ);
+  IconBitmap1 = getBitmap(wi_raindrops,WI_SZ1);
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
                      IconBitmap,WI_SZ,WI_SZ,TFT_BLACK);
+  FREE_BITMAP(IconBitmap);
   
   // icons
   drawInvertedBitmap(WI_COL * PosX + 24 - 12, WI_Y0 + WI_DY * PosY + 4,
                      IconBitmap1,WI_SZ1,WI_SZ1,TFT_BLACK);
+  FREE_BITMAP(IconBitmap1);
   
   // labels
   setFreeFont(LabelFont);
@@ -1057,7 +1133,6 @@ void DrawOWM::drawInit()
       case FORMAT_400X300:
          LabelFont = &FONT_6pt8b;
          ValueFont = &FONT_7pt8b;
-         UnitFont = &FONT_7pt8b;
          WI_COL  = 85;   // column width (px)
          WI_Y0   = 104;  // first-row base y
          WI_DY   = 40;   // row stride (icon 24 + gap 10)
@@ -1071,7 +1146,6 @@ void DrawOWM::drawInit()
       case FORMAT_800X480:
          LabelFont = &FONT_7pt8b;
          ValueFont = &FONT_12pt8b;
-         UnitFont = &FONT_14pt8b;
          WI_COL  = 162;  // column width (px)
          WI_Y0   = 204;  // first-row base y
          WI_DY   = 56;   // row stride (icon 48 + gap 8)
@@ -1094,6 +1168,7 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
    String dataStr, unitStr;
    // current weather icon
    const GFXfont *TemperatureFont = NULL;
+   const GFXfont *UnitFont = NULL;
    const uint8_t *IconBitmap = NULL;
    uint16_t TempX = 0;
    uint16_t TempY = 0;
@@ -1109,6 +1184,7 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
       case FORMAT_400X300:
          LargeIconSize = 96;
          TemperatureFont = &FONT_18pt8b;
+         UnitFont = &FONT_7pt8b;
          IconBitmap = getCurrentConditionsBitmap96(current, today);
          TempX = 96 + 30 - 10;
          TempY = 96 / 2 + 25 / 2;
@@ -1120,15 +1196,18 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
       case FORMAT_640X384:
       case FORMAT_800X480:
          LargeIconSize = 196;
-         TemperatureFont = &FONT_48pt8b_temperature;
          IconBitmap = getCurrentConditionsBitmap196(current, today);
          if(config.DisplayFormat == FORMAT_640X384) {
+            TemperatureFont = &FONT_26pt8b;
+            UnitFont = &FONT_11pt8b;
             TempX = 156 + 164 / 2 - 20;
             FeelsLikeX = 156 + 164 / 2 - 20;
          // align feels like with high / low temps to better clear weather ICON
             FeelsLikeY = 98 + 69 / 2 + 38 - 12 + 12;
          }
          else {
+            TemperatureFont = &FONT_48pt8b_temperature;
+            UnitFont = &FONT_14pt8b;
             TempX = 196 + 164 / 2 - 20;
             FeelsLikeX = 196 + 164 / 2;
             FeelsLikeY = 98 + 69 / 2 + 12 + 17;
@@ -1139,6 +1218,13 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
    }
 
    drawInvertedBitmap(0, 0,IconBitmap,LargeIconSize,LargeIconSize,TFT_BLACK);
+   FREE_BITMAP(IconBitmap);
+#ifdef DBG_DRAW_BOUNDING_BOX
+   drawLine(0,0,LargeIconSize,0,TFT_RED); // top
+   drawLine(0,LargeIconSize,LargeIconSize,LargeIconSize,TFT_RED); // bottom
+   drawLine(0,0,0,LargeIconSize,TFT_RED); // left
+   drawLine(LargeIconSize,0,LargeIconSize,LargeIconSize,TFT_RED);   // right
+#endif
 
    // current temp
    if (config.bMetric) {
@@ -1290,6 +1376,8 @@ void DrawOWM::drawForecast(const owm_daily_t *daily, tm timeInfo) {
       }
       // icons
       drawInvertedBitmap(x,y,IconBitmap,DailyWI_SZ,DailyWI_SZ,TFT_BLACK);
+      FREE_BITMAP(IconBitmap);
+
 
       // day of week label
       char dayBuffer[8] = {};
@@ -1961,16 +2049,23 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   LOG("\n");
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
-        IconBitmap = wi_refresh_24x24;
         RefreshWI_SZ = 24;
+#ifndef TTF_PATH_WEATHER_ICONS
+        IconBitmap = wi_refresh_24x24;
+#endif
         break;
 
      case FORMAT_640X384:
      case FORMAT_800X480:
-        IconBitmap = wi_refresh_32x32;
         RefreshWI_SZ = 32;
+#ifndef TTF_PATH_WEATHER_ICONS
+        IconBitmap = wi_refresh_32x32;
+#endif
         break;
   }
+#ifdef TTF_PATH_WEATHER_ICONS
+  IconBitmap = getBitmap(wi_refresh,RefreshWI_SZ);
+#endif
 
 #if BATTERY_MONITORING
   uint32_t batPercent = calcBatPercent(batVoltage,MIN_BATTERY_VOLTAGE,
@@ -2025,6 +2120,7 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   pos -= getStringWidth(refreshTimeStr) + 25;
   drawInvertedBitmap(pos,config.DisplayHeight - 1 - 21,IconBitmap,
                      RefreshWI_SZ,RefreshWI_SZ,dataColor);
+  FREE_BITMAP(IconBitmap);
   pos -= sp;
 
   // status

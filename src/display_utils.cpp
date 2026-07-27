@@ -33,7 +33,7 @@
 // icon header files
 #include "icons/icons.h"
 
-#define ENABLE_LOGGING  0
+#define ENABLE_LOGGING  1
 #if ENABLE_LOGGING && __has_include("logging.h") 
 #include "logging.h"
 #else
@@ -66,6 +66,7 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv,bool bLiPo)
 
       // normal
       Ret = 105 - (105 / (1 + pow(1.724 * (v - minv)/(maxv - minv), 5.5)));
+      Ret = Ret >= 100 ? 100 : Ret;
    }
    else {
    // LUT version for CR2450 coin cell (lithium manganese dioxide)
@@ -75,25 +76,29 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv,bool bLiPo)
       if (v >= 3050) {
          Ret = 100;
       }
-      else if (v >= 2950) {
-         Ret = 90 + ((v - 2950)/(3050 - 2950)) * 10;
+      else if (v >= 3000) {
+      // >= 3.00v, 90% -> 100%
+         Ret = 90 + (v - 3000) * 10 /(3200 - 3000);
       }
       if (v >= 2900) {
-         Ret = 60 + ((v - 2900)/(2950 - 2900)) * 30;
+      // >= 2.90v, 40% -> 90%
+         Ret = 40 + (v - 2900) * 50 /(3000 - 2900);
       }
-      else if (v >= 2850) {
-         Ret = 30 + ((v - 2850)/(2900 - 2850)) * 30;
+      else if (v >= 2800) {
+      // >= 2.80v, 15% -> 40%
+         Ret = 15 + (v - 2800) * 25 /(2900 - 2800);
       }
-      else if (v >= 2750) {
-         Ret = 10 + ((v - 2750)/(2850 - 2750)) * 20;
+      else if (v >= 2000) {
+      // >= 2.00v, 0% -> 15%
+         Ret = 10 + (v - 2000) * 15 /(2800 - 2000);
       }
-      else if (v >= 2500) {
-         Ret = 0  + ((v - 2500)/(2750 - 2500)) * 10;
+      else {
+         Ret = 0;
       }
    }
 
-   LOG("v %d  = %d%%\n",v,Ret);
-   return Ret >= 100 ? 100 : Ret;
+   LOG("bLiPo %d, v %d  = %d%%\n",bLiPo,v,Ret);
+   return Ret;
 } // end calcBatPercent
 
 /* Returns 24x24 bitmap incidcating battery status.
@@ -473,9 +478,14 @@ bool isWindy(float wind_speed, float wind_gust) {
  * References:
  *   https://openweathermap.org/weather-conditions
  */
+#ifndef TTF_PATH_WEATHER_ICONS
 template <int BitmapSize>
-const uint8_t *getConditionsBitmap(int id, bool day, bool moon, bool cloudy,
-                                   bool windy)
+const uint8_t *getConditionsBitmap(
+   int id, bool day, bool moon, bool cloudy,bool windy)
+#else
+const uint8_t *DrawOWM::getConditionsBitmap(
+   int BitmapSize,int id, bool day, bool moon, bool cloudy,bool windy)
+#endif
 {
   switch (id)
   {
@@ -617,6 +627,8 @@ const uint8_t *getConditionsBitmap(int id, bool day, bool moon, bool cloudy,
   }
 } // end getConditionsBitmap
 
+#ifndef TTF_PATH_WEATHER_ICONS
+
 /* Takes the daily weather forecast (from OpenWeatherMap API response) and
  * returns a pointer to the icon's 32x32 bitmap.
  *
@@ -659,7 +671,6 @@ const uint8_t *getDailyForecastBitmap32(const owm_daily_t &daily)
   return getConditionsBitmap<32>(id, day, moon, cloudy, windy);
 } // end getForecastBitmap32
 
-
 /* Takes the current weather and today's daily weather forcast (from
  * OpenWeatherMap API response) and returns a pointer to the icon's 196x196
  * bitmap.
@@ -691,6 +702,204 @@ const uint8_t *getCurrentConditionsBitmap96(const owm_current_t &current,
   return getConditionsBitmap<96>(id, day, moon, cloudy, windy);
 } // end getCurrentConditionsBitmap96
 
+#else
+/* Takes the daily weather forecast (from OpenWeatherMap API response) and
+ * returns a pointer to the icon's 32x32 bitmap.
+ *
+ * The daily weather forcast of today is needed for moonrise and moonset times.
+ */
+const uint8_t *DrawOWM::getHourlyForecastBitmap(
+   int BitmapSize,
+   const owm_hourly_t &hourly,
+   const owm_daily_t  &today)
+{
+  const int id = hourly.weather.id;
+  const bool day = isDay(hourly.weather.icon);
+  const bool moon = isMoonInSky(hourly.dt, today.moonrise, today.moonset,
+                                today.moon_phase);
+  const bool cloudy = isCloudy(hourly.clouds);
+  const bool windy = isWindy(hourly.wind_speed, hourly.wind_gust);
+  return getConditionsBitmap(BitmapSize,id, day, moon, cloudy, windy);
+}
+
+/* Takes the daily weather forecast (from OpenWeatherMap API response) and
+ * returns a pointer to the icon's 64x64 bitmap.
+ */
+const uint8_t *DrawOWM::getDailyForecastBitmap(
+   int BitmapSize,
+   const owm_daily_t &daily)
+{
+  const int id = daily.weather.id;
+  // always show daytime icon for daily forecast
+  const bool day = true;
+  const bool moon = false;
+  const bool cloudy = isCloudy(daily.clouds);
+  const bool windy = isWindy(daily.wind_speed, daily.wind_gust);
+  return getConditionsBitmap(BitmapSize,id, day, moon, cloudy, windy);
+}
+
+const uint8_t *DrawOWM::getCurrentConditionsBitmap(
+   int BitmapSize,
+   const owm_current_t &current,
+   const owm_daily_t   &today)
+{
+   const int id = current.weather.id;
+   const bool day = isDay(current.weather.icon);
+   const bool moon = isMoonInSky(current.dt, today.moonrise, today.moonset,
+                                 today.moon_phase);
+   const bool cloudy = isCloudy(current.clouds);
+   const bool windy = isWindy(current.wind_speed, current.wind_gust);
+
+   return getConditionsBitmap(BitmapSize,id, day, moon, cloudy, windy);
+}
+
+void DrawOWM::FreeBitMap(uint8_t *BitMap)
+{
+   if(BitMap != NULL) {
+      int i;
+      for(i = 0; i < TTF_CACHE_SIZE; i++) {
+         if(ttfBitmaps[i] == BitMap) {
+            free(BitMap);
+            ttfBitmaps[i] = NULL;
+            // LOG("Free %p @ %d\n",BitMap,i);
+            break;
+         }
+      }
+      if(i == TTF_CACHE_SIZE) {
+         ELOG("%p not found in ttfBitmaps\n",BitMap);
+      }
+   }
+}
+
+
+const unsigned char* DrawOWM::getBitmap(int icon, size_t size) 
+{
+   wchar_t Icons[2] = {(wchar_t) icon,0};
+   int malloc_size = size * ((size + 7) / 8);
+   truetypeClass *IconsTT;
+   int ScalledSize = size;
+
+   if(icon > wi_day_cloudy_gusts && icon <= wi_moon_alt_new){
+     IconsTT = &IconTT;
+  // Scale requested size to icon fits in size x size pixel box
+  // xRange 3143 yRange 2923 unitsPerEm 2048
+     ScalledSize = (size * 2048) / 3143;
+   }
+   else {
+     IconsTT = &OwmIconTT;
+   }
+
+   uint8_t *Ret = (uint8_t *) malloc(malloc_size);
+   do {
+      if(Ret == NULL) {
+         ELOG("malloc for 0x%x %d x %d icon failed\n",icon,size,size);
+         break;
+      }
+      memset(Ret,0xff,malloc_size); // fill buffer with white
+      IconsTT->setFramebuffer(size,size,1,Ret);
+      IconsTT->setCharacterSize(ScalledSize);
+      IconsTT->setTextColor(TFT_BLACK,TFT_WHITE);
+      IconsTT->setTextBoundary(0,size,size);
+      IconsTT->textDraw(0,0,Icons);
+   } while (false);
+
+   if(Ret != NULL) {
+      int i;
+      for(i = 0; i < TTF_CACHE_SIZE; i++) {
+         if(ttfBitmaps[i] == NULL) {
+            // LOG("icon 0x%x saved %p @ %d\n",icon,Ret,i);
+            ttfBitmaps[i] = Ret;
+            break;
+         }
+      }
+      if(i == TTF_CACHE_SIZE) {
+         ELOG("ttf cache overflow\n");
+      }
+   }
+   return Ret;
+}
+
+// Define the set of moon phase icon base on the chosen moon phase style
+#ifdef MOONPHASE_PRIMARY
+static const unsigned char *moon_phase_icon_arr[] = {
+  wi_moon_new_48x48,
+  wi_moon_waxing_crescent_1_48x48,
+  wi_moon_waxing_crescent_2_48x48,
+  wi_moon_waxing_crescent_3_48x48,
+  wi_moon_waxing_crescent_4_48x48,
+  wi_moon_waxing_crescent_5_48x48,
+  wi_moon_waxing_6_48x48,
+  wi_moon_first_quarter_48x48,
+  wi_moon_waxing_gibbous_1_48x48,
+  wi_moon_waxing_gibbous_2_48x48,
+  wi_moon_waxing_gibbous_3_48x48,
+  wi_moon_waxing_gibbous_4_48x48,
+  wi_moon_waxing_gibbous_5_48x48,
+  wi_moon_waxing_gibbous_6_48x48,
+  wi_moon_full_48x48,
+  wi_moon_waning_gibbous_1_48x48,
+  wi_moon_waning_gibbous_2_48x48,
+  wi_moon_waning_gibbous_3_48x48,
+  wi_moon_waning_gibbous_4_48x48,
+  wi_moon_waning_gibbous_5_48x48,
+  wi_moon_waning_gibbous_6_48x48,
+  wi_moon_third_quarter_48x48,
+  wi_moon_waning_crescent_1_48x48,
+  wi_moon_waning_crescent_2_48x48,
+  wi_moon_waning_crescent_3_48x48,
+  wi_moon_waning_crescent_4_48x48,
+  wi_moon_waning_crescent_5_48x48,
+  wi_moon_waning_crescent_6_48x48,
+  wi_moon_new_48x48
+};
+
+#elif defined(MOONPHASE_ALTERNATIVE)
+
+static const uint16_t moon_phase_icon_arr[] = {
+  wi_moon_alt_new,
+  wi_moon_alt_waxing_crescent_1,
+  wi_moon_alt_waxing_crescent_2,
+  wi_moon_alt_waxing_crescent_3,
+  wi_moon_alt_waxing_crescent_4,
+  wi_moon_alt_waxing_crescent_5,
+  wi_moon_alt_waxing_crescent_6,
+  wi_moon_alt_first_quarter,
+  wi_moon_alt_waxing_gibbous_1,
+  wi_moon_alt_waxing_gibbous_2,
+  wi_moon_alt_waxing_gibbous_3,
+  wi_moon_alt_waxing_gibbous_4,
+  wi_moon_alt_waxing_gibbous_5,
+  wi_moon_alt_waxing_gibbous_6,
+  wi_moon_alt_full,
+  wi_moon_alt_waning_gibbous_1,
+  wi_moon_alt_waning_gibbous_2,
+  wi_moon_alt_waning_gibbous_3,
+  wi_moon_alt_waning_gibbous_4,
+  wi_moon_alt_waning_gibbous_5,
+  wi_moon_alt_waning_gibbous_6,
+  wi_moon_alt_third_quarter,
+  wi_moon_alt_waning_crescent_1,
+  wi_moon_alt_waning_crescent_2,
+  wi_moon_alt_waning_crescent_3,
+  wi_moon_alt_waning_crescent_4,
+  wi_moon_alt_waning_crescent_5,
+  wi_moon_alt_waning_crescent_6,
+  wi_moon_alt_new 
+};
+#endif
+
+/*  Returns the moon phase icon bitmap based on api response between 0 and 1
+ *  0 and 1 means new moon
+ *  0.5 means full moon
+ *  scale range to match 28 numbers of different icons
+ *  offset +0.5 to shift icon to center of moon phase period
+*/
+uint16_t getMoonPhaseIcon(const owm_daily_t &daily) 
+{
+   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
+   return moon_phase_icon_arr[n];
+}
+#endif   // TTF_PATH_WEATHER_ICONS
 
 /* Returns a 32x32 bitmap for a given alert.
  *
@@ -1389,6 +1598,7 @@ const char *getCompassPointNotation(int windDeg)
   return COMPASS_POINT_NOTATION[arr_offset];
 } // end getCompassPointNotation
 
+#ifndef TTF_PATH_WEATHER_ICONS
 
 // Define the set of moon phase icon base on the chosen moon phase style
 #ifdef MOONPHASE_PRIMARY
@@ -1508,7 +1718,7 @@ const uint8_t *getMoonPhaseBitmap24(const owm_daily_t &daily)
   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
     return moon_phase_icon_arr24[n];
 } // end getMoonPhaseBitmap24
-
+#endif   // TTF_PATH_WEATHER_ICONS
 
 // Returns the current moon phase string
 const char *DrawOWM::getMoonPhaseStr(const owm_daily_t &daily)
@@ -1548,3 +1758,4 @@ const char *DrawOWM::getMoonPhaseStr(const owm_daily_t &daily)
   default:  return "";
   }
 } // end getMoonPhaseStr
+

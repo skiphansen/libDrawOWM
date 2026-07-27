@@ -117,10 +117,32 @@ DrawOWM::DrawOWM(TFT_eSprite &epaper,OwmConfig &Config)
       .TXT_UNITS_PRECIP_CENTIMETERS = "cm",
       .TXT_UNITS_PRECIP_INCHES      = "in"
    };
+
    SetLocale(&LocaleStrings);
+#ifdef TTF_PATH_WEATHER_ICONS
+   memset(ttfBitmaps,0,sizeof(ttfBitmaps));
+#endif
 }
 
-void DrawOWM::DrawIt()
+DrawOWM::~DrawOWM()
+{
+#ifdef TTF_PATH_WEATHER_ICONS
+// Ensure all ttfBitmaps have been free'ed
+   for(int i = 0; i < TTF_CACHE_SIZE; i++) {
+      if(ttfBitmaps[i] != NULL) {
+         LOG("Leak: %p @ %d\n",ttfBitmaps[i],i);
+         free(ttfBitmaps[i]);
+      }
+   }
+   IconTT.end();
+#endif
+
+#ifdef TTF_PATH_TEXT
+   TextTT.end();
+#endif
+}
+
+const char *DrawOWM::DrawIt()
 {
    tm timeInfo = {};
    String dateStr;
@@ -128,22 +150,45 @@ void DrawOWM::DrawIt()
    time_t CurrentTime;
    String statusStr = {};
 
-   deserializeOneCall(config.ForecastApiResponse,owm_onecall,config.bDisplayAlerts);
-   CurrentTime = (time_t) owm_onecall.current.dt;
-   localtime_r(&CurrentTime, &timeInfo);
-   getRefreshTimeStr(refreshTimeStr,true,&timeInfo);
-   getDateStr(dateStr, &timeInfo);
-   deserializeAirQuality(config.AirPollutionApiResponse,owm_air_pollution);
-   drawInit();
-   drawCurrentConditions(owm_onecall.current, owm_onecall.daily[0],
-                         owm_air_pollution, config.inTemp,config.inHumidity);
-   drawOutlookGraph(owm_onecall.hourly, owm_onecall.daily, timeInfo);
-   drawForecast(owm_onecall.daily, timeInfo);
-   drawLocationDate(config.City,dateStr);
-   if(config.bDisplayAlerts ) {
-      drawAlerts(owm_onecall.alerts,config.City,dateStr);
-   }
-   drawStatusBar(statusStr,refreshTimeStr,config.Rssi,config.batteryVoltage);
+   do {
+#ifdef TTF_SUPPORT
+      uint8_t Err;
+#ifdef TTF_PATH_WEATHER_ICONS
+      IconFile = LittleFS.open(TTF_PATH_WEATHER_ICONS,"r");
+      if ((Err = IconTT.setTtfFile(IconFile)) == 0) {
+         ELOG("setTtfFile returned %d\n",Err);
+         break;
+      }
+      IconTT.setTextRotation(0);
+#endif
+#ifdef TTF_PATH_OWM_ICONS
+      OwmIconFile = LittleFS.open(TTF_PATH_OWM_ICONS,"r");
+      if ((Err = OwmIconTT.setTtfFile(OwmIconFile)) == 0) {
+         ELOG("setTtfFile returned %d\n",Err);
+         break;
+      }
+      OwmIconTT.setTextRotation(0);
+#endif
+#endif
+      deserializeOneCall(config.ForecastApiResponse,owm_onecall,
+                         config.bDisplayAlerts);
+      CurrentTime = (time_t) owm_onecall.current.dt;
+      localtime_r(&CurrentTime, &timeInfo);
+      getRefreshTimeStr(refreshTimeStr,true,&timeInfo);
+      getDateStr(dateStr, &timeInfo);
+      deserializeAirQuality(config.AirPollutionApiResponse,owm_air_pollution);
+      drawInit();
+      drawCurrentConditions(owm_onecall.current, owm_onecall.daily[0],
+                            owm_air_pollution, config.inTemp,config.inHumidity);
+      drawOutlookGraph(owm_onecall.hourly, owm_onecall.daily, timeInfo);
+      drawForecast(owm_onecall.daily, timeInfo);
+      drawLocationDate(config.City,dateStr);
+      if(config.bDisplayAlerts ) {
+         drawAlerts(owm_onecall.alerts,config.City,dateStr);
+      }
+      drawStatusBar(statusStr,refreshTimeStr,config.Rssi,config.batteryVoltage);
+   } while(false);
+   return NULL;
 }
 
 void DrawOWM::SetLocale(LocaleStrings_t *p)

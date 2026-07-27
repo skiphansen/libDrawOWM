@@ -5,6 +5,14 @@
 #include "api_response.h"
 #include "config.h"
 
+#if defined(TTF_PATH_WEATHER_ICONS) || defined(TTF_PATH_TEXT)
+   #include "LittleFS.h"
+   #define USING_TTF
+   #include <FS.h>
+   using namespace fs;
+   #include <truetype.h>
+#endif
+
 typedef enum alignment
 {
   LEFT,
@@ -219,7 +227,8 @@ public:
    DrawOWM(TFT_eSprite &spr,OwmConfig &Config);
 #endif
    void SetLocale(LocaleStrings_t *pStrings);
-   void DrawIt();
+   const char *DrawIt();
+   ~DrawOWM();
 
 private:
 #ifdef SEEED_GFX
@@ -228,6 +237,19 @@ private:
       TFT_eSprite &display;
 #endif
       OwmConfig &config;
+#ifdef TTF_SUPPORT
+      truetypeClass IconTT;
+      truetypeClass OwmIconTT;
+      File IconFile;
+      File OwmIconFile;
+      #define TTF_CACHE_SIZE  4
+      uint8_t *ttfBitmaps[TTF_CACHE_SIZE];
+#endif
+
+
+#ifdef TTF_PATH_TEXT
+      truetypeClass TextTT;
+#endif
 
       void drawInit();
       uint16_t getStringWidth(const String &text);
@@ -288,7 +310,20 @@ private:
       const char *getMoonPhaseStr(const owm_daily_t &daily);
       size_t _strftime(char *s, size_t maxsize, const char *format,
                        const struct tm *timeptr);
-
+#ifdef TTF_PATH_WEATHER_ICONS
+      const unsigned char *getBitmap(int icon, size_t size);
+      const uint8_t *getConditionsBitmap(int BitmapSize,int id,bool day,
+                                         bool moon, bool cloudy,bool windy);
+      const uint8_t *getCurrentConditionsBitmap(int BitmapSize,
+                                                const owm_current_t &current,
+                                                const owm_daily_t   &today);
+      const uint8_t *getHourlyForecastBitmap(int BitmapSize,
+                                                      const owm_hourly_t &hourly,
+                                                      const owm_daily_t  &today);
+      const uint8_t *getDailyForecastBitmap(int BitmapSize,
+                                                     const owm_daily_t &daily);
+      void FreeBitMap(uint8_t *BitMap);
+#endif
 
       owm_resp_onecall_t       owm_onecall;
       owm_resp_air_pollution_t owm_air_pollution;
@@ -314,7 +349,6 @@ private:
 
   const GFXfont *LabelFont;
   const GFXfont *ValueFont;
-  const GFXfont *UnitFont;
   uint16_t MaxX;
   uint16_t MaxY;
   const GFXfont *CurrentFont;
