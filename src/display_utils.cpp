@@ -29,7 +29,6 @@
 #include "api_response.h"
 #include "config.h"
 #include "display_utils.h"
-
 // icon header files
 #include "icons/icons.h"
 
@@ -101,6 +100,8 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv,bool bLiPo)
    return Ret;
 } // end calcBatPercent
 
+#ifdef OWM_USE_BITMAPS
+
 /* Returns 24x24 bitmap incidcating battery status.
  */
 const uint8_t *getBatBitmap24(uint32_t batPercent)
@@ -138,6 +139,38 @@ const uint8_t *getBatBitmap24(uint32_t batPercent)
     return battery_0_bar_90deg_24x24;
   }
 } // end getBatBitmap24
+
+#else
+
+const uint8_t *DrawOWM::getBatBitmap(int BitmapSize,uint32_t batPercent)
+{
+   icon_name_t icon = battery_0_bar_90deg;
+   if (batPercent >= 93) {
+      icon = battery_full_90deg;
+   }
+   else if (batPercent >= 79) {
+      icon = battery_6_bar_90deg;
+   }
+   else if (batPercent >= 65) {
+      icon = battery_5_bar_90deg;
+   }
+   else if (batPercent >= 50) {
+      icon = battery_4_bar_90deg;
+   }
+   else if (batPercent >= 36) {
+      icon = battery_3_bar_90deg;
+   }
+   else if (batPercent >= 22) {
+      icon = battery_2_bar_90deg;
+   }
+   else if (batPercent >= 8) {
+      icon = battery_1_bar_90deg;
+   }
+
+   return getBitmap(icon,24);
+}
+
+#endif   // OWM_USE_BITMAPS
 
 /* Gets string with the current date.
  */
@@ -398,6 +431,7 @@ const char *DrawOWM::getWiFidesc(int rssi)
   }
 } // end getWiFidesc
 
+#ifdef OWM_USE_BITMAPS
 /* Returns 16x16 bitmap incidcating wifi status.
  */
 const uint8_t *getWiFiBitmap16(int rssi)
@@ -423,6 +457,28 @@ const uint8_t *getWiFiBitmap16(int rssi)
     return wifi_1_bar_16x16;
   }
 } // end getWiFiBitmap24
+
+#else
+
+const uint8_t *DrawOWM::getWiFiBitmap16(int rssi) 
+{
+   icon_name_t icon = wifi_1_bar;
+   if (rssi == 0) {
+      icon =  wifi_x;
+   }
+   else if (rssi >= -50) {
+      icon =  wifi;
+   }
+   else if (rssi >= -60) {
+      icon =  wifi_3_bar;
+   }
+   else if (rssi >= -70) {
+      icon =  wifi_2_bar;
+   }
+   return getBitmap(icon,16);
+}
+
+#endif   // OWM_USE_BITMAPS
 
 /* Returns true if icon is a daytime icon, false otherwise.
  */
@@ -478,7 +534,7 @@ bool isWindy(float wind_speed, float wind_gust) {
  * References:
  *   https://openweathermap.org/weather-conditions
  */
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
 template <int BitmapSize>
 const uint8_t *getConditionsBitmap(
    int id, bool day, bool moon, bool cloudy,bool windy)
@@ -627,7 +683,7 @@ const uint8_t *DrawOWM::getConditionsBitmap(
   }
 } // end getConditionsBitmap
 
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
 
 /* Takes the daily weather forecast (from OpenWeatherMap API response) and
  * returns a pointer to the icon's 32x32 bitmap.
@@ -786,6 +842,7 @@ const unsigned char* DrawOWM::getBitmap(int icon, size_t size)
      ScalledSize = (size * 2048) / 3143;
    }
    else {
+     // LOG("Getting OwmIconTT icon 0x%04x\n",icon);
      IconsTT = &OwmIconTT;
    }
 
@@ -795,6 +852,7 @@ const unsigned char* DrawOWM::getBitmap(int icon, size_t size)
          ELOG("malloc for 0x%x %d x %d icon failed\n",icon,size,size);
          break;
       }
+//    LOG("bitmap for %d x %d icon 0x%x created @ %p\n",size,size,icon,Ret);
       memset(Ret,0xff,malloc_size); // fill buffer with white
       IconsTT->setFramebuffer(size,size,1,Ret);
       IconsTT->setCharacterSize(ScalledSize);
@@ -899,8 +957,9 @@ uint16_t getMoonPhaseIcon(const owm_daily_t &daily)
    int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
    return moon_phase_icon_arr[n];
 }
-#endif   // TTF_PATH_WEATHER_ICONS
+#endif   // OWM_USE_BITMAPS
 
+#ifdef OWM_USE_BITMAPS
 /* Returns a 32x32 bitmap for a given alert.
  *
  * The purpose of this function is to return a relevant bitmap for an alert.
@@ -992,6 +1051,56 @@ const uint8_t *getAlertBitmap48(const owm_alerts_t &alert)
   default:                   return wi_na_48x48;
   }
 } // end getAlertBitmap48
+
+#else
+
+static const uint16_t alert_icon_arr[] = {
+   warning_icon,  // NOT_FOUND
+   wi_smog, // SMOG
+   wi_smoke,   // SMOKE
+   wi_fog,  // FOG
+   wi_meteor,  // METEOR
+   ionizing_radiation_symbol, // NUCLEAR
+   biological_hazard_symbol,  // BIOHAZARD
+   wi_earthquake, // EARTHQUAKE
+   wi_fire, // FIRE
+   wi_thermometer,   // HEAT
+   wi_snowflake_cold,   // WINTER
+   wi_tsunami, // TSUNAMI
+   wi_lightning,  // LIGHTNING
+   wi_sandstorm,  // SANDSTORM
+   wi_flood,   // FLOOD
+   wi_volcano, // VOLCANO
+   wi_dust, // AIR_QUALITY
+   wi_tornado, // TORNADO
+   wi_small_craft_advisory,   // SMALL_CRAFT_ADVISORY
+   wi_gale_warning,  // GALE_WARNING
+   wi_storm_warning, // STORM_WARNING
+   wi_hurricane_warning,   // HURRICANE_WARNING
+   wi_hurricane,  // HURRICANE
+   wi_dust, // DUST
+   wi_strong_wind   // STRONG_WIND
+};
+
+
+/* Returns a 32x32 bitmap for a given alert.
+ *
+ * The purpose of this function is to return a relevant bitmap for an alert.
+ * This is done by searching the event text for key terminology defined in the
+ * included locale header.
+ * If a relevant category can not be determined, the default alert bitmap will
+ * be returned. (warning triangle icon)
+ */
+const uint8_t *DrawOWM::getAlertBitmap(int BitmapSize,const owm_alerts_t &alert) 
+{
+   enum alert_category c = getAlertCategory(alert);
+   icon_name_t icon = wi_na;
+   if(c <= STRONG_WIND) {
+      icon = (icon_name_t) alert_icon_arr[c + 1];
+   }
+   return getBitmap(icon,BitmapSize);
+}
+#endif   // OWM_USE_BITMAPS
 
 /* Returns true of a String, s, contains any of the strings in the terminology
  * vector.
@@ -1116,14 +1225,15 @@ enum alert_category getAlertCategory(const owm_alerts_t &alert)
   return alert_category::NOT_FOUND;
 } // end getAlertCategory
 
+#ifdef OWM_USE_BITMAPS
+
 #ifdef WIND_ICONS_CARDINAL
 static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_0deg_24x24,    // N
   wind_direction_meteorological_90deg_24x24,   // E
   wind_direction_meteorological_180deg_24x24,  // S
   wind_direction_meteorological_270deg_24x24}; // W
-#endif // end WIND_ICONS_CARDINAL
-#ifdef WIND_ICONS_INTERCARDINAL
+#elif defined(WIND_ICONS_INTERCARDINAL)
 static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_0deg_24x24,    // N
   wind_direction_meteorological_45deg_24x24,   // NE
@@ -1133,8 +1243,7 @@ static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_225deg_24x24,  // SW
   wind_direction_meteorological_270deg_24x24,  // W
   wind_direction_meteorological_315deg_24x24}; // NW
-#endif // end WIND_ICONS_INTERCARDINAL
-#ifdef WIND_ICONS_SECONDARY_INTERCARDINAL
+#elif defined(WIND_ICONS_SECONDARY_INTERCARDINAL)
 static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_0deg_24x24,      // N
   wind_direction_meteorological_22_5deg_24x24,   // NNE
@@ -1152,8 +1261,7 @@ static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_292_5deg_24x24,  // WNW
   wind_direction_meteorological_315deg_24x24,    // NW
   wind_direction_meteorological_337_5deg_24x24}; // NNW
-#endif // end WIND_ICONS_SECONDARY_INTERCARDINAL
-#ifdef WIND_ICONS_TERTIARY_INTERCARDINAL
+#elif defined(WIND_ICONS_TERTIARY_INTERCARDINAL)
 static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_0deg_24x24,       // N
   wind_direction_meteorological_11_25deg_24x24,   // NbE
@@ -1187,8 +1295,7 @@ static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_326_25deg_24x24,  // NWbN
   wind_direction_meteorological_337_5deg_24x24,   // NNW
   wind_direction_meteorological_348_75deg_24x24}; // NbW
-#endif // end WIND_ICONS_TERTIARY_INTERCARDINAL
-#ifdef WIND_ICONS_360
+#elif defined(WIND_ICONS_360)
 static const unsigned char *wind_direction_icon_arr[] = {
   wind_direction_meteorological_0deg_24x24,
   wind_direction_meteorological_1deg_24x24,
@@ -1568,6 +1675,455 @@ const uint8_t *getWindBitmap24(int windDeg)
   return wind_direction_icon_arr[arr_offset];
 } // end getWindBitmap24
 
+#else
+
+#ifdef WIND_ICONS_CARDINAL
+static uint16_t wind_direction_icon_arr[] = {
+  wind_direction_meteorological_0deg,    // N
+  wind_direction_meteorological_90deg,   // E
+  wind_direction_meteorological_180deg,  // S
+  wind_direction_meteorological_270deg}; // W
+#elif defined(WIND_ICONS_INTERCARDINAL)
+static uint16_t wind_direction_icon_arr[] = {
+  wind_direction_meteorological_0deg,    // N
+  wind_direction_meteorological_45deg,   // NE
+  wind_direction_meteorological_90deg,   // E
+  wind_direction_meteorological_135deg,  // SE
+  wind_direction_meteorological_180deg,  // S
+  wind_direction_meteorological_225deg,  // SW
+  wind_direction_meteorological_270deg,  // W
+  wind_direction_meteorological_315deg}; // NW
+#elif defined(WIND_ICONS_SECONDARY_INTERCARDINAL)
+static uint16_t wind_direction_icon_arr[] = {
+  wind_direction_meteorological_0deg,      // N
+  wind_direction_meteorological_22_5deg,   // NNE
+  wind_direction_meteorological_45deg,     // NE
+  wind_direction_meteorological_67_5deg,   // ENE
+  wind_direction_meteorological_90deg,     // E
+  wind_direction_meteorological_112_5deg,  // ESE
+  wind_direction_meteorological_135deg,    // SE
+  wind_direction_meteorological_157_5deg,  // SSE
+  wind_direction_meteorological_180deg,    // S
+  wind_direction_meteorological_202_5deg,  // SSW
+  wind_direction_meteorological_225deg,    // SW
+  wind_direction_meteorological_247_5deg,  // WSW
+  wind_direction_meteorological_270deg,    // W
+  wind_direction_meteorological_292_5deg,  // WNW
+  wind_direction_meteorological_315deg,    // NW
+  wind_direction_meteorological_337_5deg}; // NNW
+#elif defined(WIND_ICONS_TERTIARY_INTERCARDINAL)
+static uint16_t wind_direction_icon_arr[] = {
+  wind_direction_meteorological_0deg,       // N
+  wind_direction_meteorological_11_25deg,   // NbE
+  wind_direction_meteorological_22_5deg,    // NNE
+  wind_direction_meteorological_33_75deg,   // NEbN
+  wind_direction_meteorological_45deg,      // NE
+  wind_direction_meteorological_56_25deg,   // NEbE
+  wind_direction_meteorological_67_5deg,    // ENE
+  wind_direction_meteorological_78_75deg,   // EbN
+  wind_direction_meteorological_90deg,      // E
+  wind_direction_meteorological_101_25deg,  // EbS
+  wind_direction_meteorological_112_5deg,   // ESE
+  wind_direction_meteorological_123_75deg,  // SEbE
+  wind_direction_meteorological_135deg,     // SE
+  wind_direction_meteorological_146_25deg,  // SEbS
+  wind_direction_meteorological_157_5deg,   // SSE
+  wind_direction_meteorological_168_75deg,  // SbE
+  wind_direction_meteorological_180deg,     // S
+  wind_direction_meteorological_191_25deg,  // SbW
+  wind_direction_meteorological_202_5deg,   // SSW
+  wind_direction_meteorological_213_75deg,  // SWbS
+  wind_direction_meteorological_225deg,     // SW
+  wind_direction_meteorological_236_25deg,  // SWbW
+  wind_direction_meteorological_247_5deg,   // WSW
+  wind_direction_meteorological_258_75deg,  // WbS
+  wind_direction_meteorological_270deg,     // W
+  wind_direction_meteorological_281_25deg,  // WbN
+  wind_direction_meteorological_292_5deg,   // WNW
+  wind_direction_meteorological_303_75deg,  // NWbW
+  wind_direction_meteorological_315deg,     // NW
+  wind_direction_meteorological_326_25deg,  // NWbN
+  wind_direction_meteorological_337_5deg,   // NNW
+  wind_direction_meteorological_348_75deg}; // NbW
+#elif defined(WIND_ICONS_360)
+static uint16_t wind_direction_icon_arr[] = {
+  wind_direction_meteorological_0deg,
+  wind_direction_meteorological_1deg,
+  wind_direction_meteorological_2deg,
+  wind_direction_meteorological_3deg,
+  wind_direction_meteorological_4deg,
+  wind_direction_meteorological_5deg,
+  wind_direction_meteorological_6deg,
+  wind_direction_meteorological_7deg,
+  wind_direction_meteorological_8deg,
+  wind_direction_meteorological_9deg,
+  wind_direction_meteorological_10deg,
+  wind_direction_meteorological_11deg,
+  wind_direction_meteorological_12deg,
+  wind_direction_meteorological_13deg,
+  wind_direction_meteorological_14deg,
+  wind_direction_meteorological_15deg,
+  wind_direction_meteorological_16deg,
+  wind_direction_meteorological_17deg,
+  wind_direction_meteorological_18deg,
+  wind_direction_meteorological_19deg,
+  wind_direction_meteorological_20deg,
+  wind_direction_meteorological_21deg,
+  wind_direction_meteorological_22deg,
+  wind_direction_meteorological_23deg,
+  wind_direction_meteorological_24deg,
+  wind_direction_meteorological_25deg,
+  wind_direction_meteorological_26deg,
+  wind_direction_meteorological_27deg,
+  wind_direction_meteorological_28deg,
+  wind_direction_meteorological_29deg,
+  wind_direction_meteorological_30deg,
+  wind_direction_meteorological_31deg,
+  wind_direction_meteorological_32deg,
+  wind_direction_meteorological_33deg,
+  wind_direction_meteorological_34deg,
+  wind_direction_meteorological_35deg,
+  wind_direction_meteorological_36deg,
+  wind_direction_meteorological_37deg,
+  wind_direction_meteorological_38deg,
+  wind_direction_meteorological_39deg,
+  wind_direction_meteorological_40deg,
+  wind_direction_meteorological_41deg,
+  wind_direction_meteorological_42deg,
+  wind_direction_meteorological_43deg,
+  wind_direction_meteorological_44deg,
+  wind_direction_meteorological_45deg,
+  wind_direction_meteorological_46deg,
+  wind_direction_meteorological_47deg,
+  wind_direction_meteorological_48deg,
+  wind_direction_meteorological_49deg,
+  wind_direction_meteorological_50deg,
+  wind_direction_meteorological_51deg,
+  wind_direction_meteorological_52deg,
+  wind_direction_meteorological_53deg,
+  wind_direction_meteorological_54deg,
+  wind_direction_meteorological_55deg,
+  wind_direction_meteorological_56deg,
+  wind_direction_meteorological_57deg,
+  wind_direction_meteorological_58deg,
+  wind_direction_meteorological_59deg,
+  wind_direction_meteorological_60deg,
+  wind_direction_meteorological_61deg,
+  wind_direction_meteorological_62deg,
+  wind_direction_meteorological_63deg,
+  wind_direction_meteorological_64deg,
+  wind_direction_meteorological_65deg,
+  wind_direction_meteorological_66deg,
+  wind_direction_meteorological_67deg,
+  wind_direction_meteorological_68deg,
+  wind_direction_meteorological_69deg,
+  wind_direction_meteorological_70deg,
+  wind_direction_meteorological_71deg,
+  wind_direction_meteorological_72deg,
+  wind_direction_meteorological_73deg,
+  wind_direction_meteorological_74deg,
+  wind_direction_meteorological_75deg,
+  wind_direction_meteorological_76deg,
+  wind_direction_meteorological_77deg,
+  wind_direction_meteorological_78deg,
+  wind_direction_meteorological_79deg,
+  wind_direction_meteorological_80deg,
+  wind_direction_meteorological_81deg,
+  wind_direction_meteorological_82deg,
+  wind_direction_meteorological_83deg,
+  wind_direction_meteorological_84deg,
+  wind_direction_meteorological_85deg,
+  wind_direction_meteorological_86deg,
+  wind_direction_meteorological_87deg,
+  wind_direction_meteorological_88deg,
+  wind_direction_meteorological_89deg,
+  wind_direction_meteorological_90deg,
+  wind_direction_meteorological_91deg,
+  wind_direction_meteorological_92deg,
+  wind_direction_meteorological_93deg,
+  wind_direction_meteorological_94deg,
+  wind_direction_meteorological_95deg,
+  wind_direction_meteorological_96deg,
+  wind_direction_meteorological_97deg,
+  wind_direction_meteorological_98deg,
+  wind_direction_meteorological_99deg,
+  wind_direction_meteorological_100deg,
+  wind_direction_meteorological_101deg,
+  wind_direction_meteorological_102deg,
+  wind_direction_meteorological_103deg,
+  wind_direction_meteorological_104deg,
+  wind_direction_meteorological_105deg,
+  wind_direction_meteorological_106deg,
+  wind_direction_meteorological_107deg,
+  wind_direction_meteorological_108deg,
+  wind_direction_meteorological_109deg,
+  wind_direction_meteorological_110deg,
+  wind_direction_meteorological_111deg,
+  wind_direction_meteorological_112deg,
+  wind_direction_meteorological_113deg,
+  wind_direction_meteorological_114deg,
+  wind_direction_meteorological_115deg,
+  wind_direction_meteorological_116deg,
+  wind_direction_meteorological_117deg,
+  wind_direction_meteorological_118deg,
+  wind_direction_meteorological_119deg,
+  wind_direction_meteorological_120deg,
+  wind_direction_meteorological_121deg,
+  wind_direction_meteorological_122deg,
+  wind_direction_meteorological_123deg,
+  wind_direction_meteorological_124deg,
+  wind_direction_meteorological_125deg,
+  wind_direction_meteorological_126deg,
+  wind_direction_meteorological_127deg,
+  wind_direction_meteorological_128deg,
+  wind_direction_meteorological_129deg,
+  wind_direction_meteorological_130deg,
+  wind_direction_meteorological_131deg,
+  wind_direction_meteorological_132deg,
+  wind_direction_meteorological_133deg,
+  wind_direction_meteorological_134deg,
+  wind_direction_meteorological_135deg,
+  wind_direction_meteorological_136deg,
+  wind_direction_meteorological_137deg,
+  wind_direction_meteorological_138deg,
+  wind_direction_meteorological_139deg,
+  wind_direction_meteorological_140deg,
+  wind_direction_meteorological_141deg,
+  wind_direction_meteorological_142deg,
+  wind_direction_meteorological_143deg,
+  wind_direction_meteorological_144deg,
+  wind_direction_meteorological_145deg,
+  wind_direction_meteorological_146deg,
+  wind_direction_meteorological_147deg,
+  wind_direction_meteorological_148deg,
+  wind_direction_meteorological_149deg,
+  wind_direction_meteorological_150deg,
+  wind_direction_meteorological_151deg,
+  wind_direction_meteorological_152deg,
+  wind_direction_meteorological_153deg,
+  wind_direction_meteorological_154deg,
+  wind_direction_meteorological_155deg,
+  wind_direction_meteorological_156deg,
+  wind_direction_meteorological_157deg,
+  wind_direction_meteorological_158deg,
+  wind_direction_meteorological_159deg,
+  wind_direction_meteorological_160deg,
+  wind_direction_meteorological_161deg,
+  wind_direction_meteorological_162deg,
+  wind_direction_meteorological_163deg,
+  wind_direction_meteorological_164deg,
+  wind_direction_meteorological_165deg,
+  wind_direction_meteorological_166deg,
+  wind_direction_meteorological_167deg,
+  wind_direction_meteorological_168deg,
+  wind_direction_meteorological_169deg,
+  wind_direction_meteorological_170deg,
+  wind_direction_meteorological_171deg,
+  wind_direction_meteorological_172deg,
+  wind_direction_meteorological_173deg,
+  wind_direction_meteorological_174deg,
+  wind_direction_meteorological_175deg,
+  wind_direction_meteorological_176deg,
+  wind_direction_meteorological_177deg,
+  wind_direction_meteorological_178deg,
+  wind_direction_meteorological_179deg,
+  wind_direction_meteorological_180deg,
+  wind_direction_meteorological_181deg,
+  wind_direction_meteorological_182deg,
+  wind_direction_meteorological_183deg,
+  wind_direction_meteorological_184deg,
+  wind_direction_meteorological_185deg,
+  wind_direction_meteorological_186deg,
+  wind_direction_meteorological_187deg,
+  wind_direction_meteorological_188deg,
+  wind_direction_meteorological_189deg,
+  wind_direction_meteorological_190deg,
+  wind_direction_meteorological_191deg,
+  wind_direction_meteorological_192deg,
+  wind_direction_meteorological_193deg,
+  wind_direction_meteorological_194deg,
+  wind_direction_meteorological_195deg,
+  wind_direction_meteorological_196deg,
+  wind_direction_meteorological_197deg,
+  wind_direction_meteorological_198deg,
+  wind_direction_meteorological_199deg,
+  wind_direction_meteorological_200deg,
+  wind_direction_meteorological_201deg,
+  wind_direction_meteorological_202deg,
+  wind_direction_meteorological_203deg,
+  wind_direction_meteorological_204deg,
+  wind_direction_meteorological_205deg,
+  wind_direction_meteorological_206deg,
+  wind_direction_meteorological_207deg,
+  wind_direction_meteorological_208deg,
+  wind_direction_meteorological_209deg,
+  wind_direction_meteorological_210deg,
+  wind_direction_meteorological_211deg,
+  wind_direction_meteorological_212deg,
+  wind_direction_meteorological_213deg,
+  wind_direction_meteorological_214deg,
+  wind_direction_meteorological_215deg,
+  wind_direction_meteorological_216deg,
+  wind_direction_meteorological_217deg,
+  wind_direction_meteorological_218deg,
+  wind_direction_meteorological_219deg,
+  wind_direction_meteorological_220deg,
+  wind_direction_meteorological_221deg,
+  wind_direction_meteorological_222deg,
+  wind_direction_meteorological_223deg,
+  wind_direction_meteorological_224deg,
+  wind_direction_meteorological_225deg,
+  wind_direction_meteorological_226deg,
+  wind_direction_meteorological_227deg,
+  wind_direction_meteorological_228deg,
+  wind_direction_meteorological_229deg,
+  wind_direction_meteorological_230deg,
+  wind_direction_meteorological_231deg,
+  wind_direction_meteorological_232deg,
+  wind_direction_meteorological_233deg,
+  wind_direction_meteorological_234deg,
+  wind_direction_meteorological_235deg,
+  wind_direction_meteorological_236deg,
+  wind_direction_meteorological_237deg,
+  wind_direction_meteorological_238deg,
+  wind_direction_meteorological_239deg,
+  wind_direction_meteorological_240deg,
+  wind_direction_meteorological_241deg,
+  wind_direction_meteorological_242deg,
+  wind_direction_meteorological_243deg,
+  wind_direction_meteorological_244deg,
+  wind_direction_meteorological_245deg,
+  wind_direction_meteorological_246deg,
+  wind_direction_meteorological_247deg,
+  wind_direction_meteorological_248deg,
+  wind_direction_meteorological_249deg,
+  wind_direction_meteorological_250deg,
+  wind_direction_meteorological_251deg,
+  wind_direction_meteorological_252deg,
+  wind_direction_meteorological_253deg,
+  wind_direction_meteorological_254deg,
+  wind_direction_meteorological_255deg,
+  wind_direction_meteorological_256deg,
+  wind_direction_meteorological_257deg,
+  wind_direction_meteorological_258deg,
+  wind_direction_meteorological_259deg,
+  wind_direction_meteorological_260deg,
+  wind_direction_meteorological_261deg,
+  wind_direction_meteorological_262deg,
+  wind_direction_meteorological_263deg,
+  wind_direction_meteorological_264deg,
+  wind_direction_meteorological_265deg,
+  wind_direction_meteorological_266deg,
+  wind_direction_meteorological_267deg,
+  wind_direction_meteorological_268deg,
+  wind_direction_meteorological_269deg,
+  wind_direction_meteorological_270deg,
+  wind_direction_meteorological_271deg,
+  wind_direction_meteorological_272deg,
+  wind_direction_meteorological_273deg,
+  wind_direction_meteorological_274deg,
+  wind_direction_meteorological_275deg,
+  wind_direction_meteorological_276deg,
+  wind_direction_meteorological_277deg,
+  wind_direction_meteorological_278deg,
+  wind_direction_meteorological_279deg,
+  wind_direction_meteorological_280deg,
+  wind_direction_meteorological_281deg,
+  wind_direction_meteorological_282deg,
+  wind_direction_meteorological_283deg,
+  wind_direction_meteorological_284deg,
+  wind_direction_meteorological_285deg,
+  wind_direction_meteorological_286deg,
+  wind_direction_meteorological_287deg,
+  wind_direction_meteorological_288deg,
+  wind_direction_meteorological_289deg,
+  wind_direction_meteorological_290deg,
+  wind_direction_meteorological_291deg,
+  wind_direction_meteorological_292deg,
+  wind_direction_meteorological_293deg,
+  wind_direction_meteorological_294deg,
+  wind_direction_meteorological_295deg,
+  wind_direction_meteorological_296deg,
+  wind_direction_meteorological_297deg,
+  wind_direction_meteorological_298deg,
+  wind_direction_meteorological_299deg,
+  wind_direction_meteorological_300deg,
+  wind_direction_meteorological_301deg,
+  wind_direction_meteorological_302deg,
+  wind_direction_meteorological_303deg,
+  wind_direction_meteorological_304deg,
+  wind_direction_meteorological_305deg,
+  wind_direction_meteorological_306deg,
+  wind_direction_meteorological_307deg,
+  wind_direction_meteorological_308deg,
+  wind_direction_meteorological_309deg,
+  wind_direction_meteorological_310deg,
+  wind_direction_meteorological_311deg,
+  wind_direction_meteorological_312deg,
+  wind_direction_meteorological_313deg,
+  wind_direction_meteorological_314deg,
+  wind_direction_meteorological_315deg,
+  wind_direction_meteorological_316deg,
+  wind_direction_meteorological_317deg,
+  wind_direction_meteorological_318deg,
+  wind_direction_meteorological_319deg,
+  wind_direction_meteorological_320deg,
+  wind_direction_meteorological_321deg,
+  wind_direction_meteorological_322deg,
+  wind_direction_meteorological_323deg,
+  wind_direction_meteorological_324deg,
+  wind_direction_meteorological_325deg,
+  wind_direction_meteorological_326deg,
+  wind_direction_meteorological_327deg,
+  wind_direction_meteorological_328deg,
+  wind_direction_meteorological_329deg,
+  wind_direction_meteorological_330deg,
+  wind_direction_meteorological_331deg,
+  wind_direction_meteorological_332deg,
+  wind_direction_meteorological_333deg,
+  wind_direction_meteorological_334deg,
+  wind_direction_meteorological_335deg,
+  wind_direction_meteorological_336deg,
+  wind_direction_meteorological_337deg,
+  wind_direction_meteorological_338deg,
+  wind_direction_meteorological_339deg,
+  wind_direction_meteorological_340deg,
+  wind_direction_meteorological_341deg,
+  wind_direction_meteorological_342deg,
+  wind_direction_meteorological_343deg,
+  wind_direction_meteorological_344deg,
+  wind_direction_meteorological_345deg,
+  wind_direction_meteorological_346deg,
+  wind_direction_meteorological_347deg,
+  wind_direction_meteorological_348deg,
+  wind_direction_meteorological_349deg,
+  wind_direction_meteorological_350deg,
+  wind_direction_meteorological_351deg,
+  wind_direction_meteorological_352deg,
+  wind_direction_meteorological_353deg,
+  wind_direction_meteorological_354deg,
+  wind_direction_meteorological_355deg,
+  wind_direction_meteorological_356deg,
+  wind_direction_meteorological_357deg,
+  wind_direction_meteorological_358deg,
+  wind_direction_meteorological_359deg};
+#endif // end WIND_ICONS_360
+
+const uint8_t *DrawOWM::getWindBitmap(int BitmapSize,int windDeg)
+{
+  windDeg %= 360; // enforce domain
+  // number of directions
+  int n = sizeof(wind_direction_icon_arr)
+          / sizeof(wind_direction_icon_arr[0]);
+  int arr_offset = (int) ( (windDeg + (360 / n / 2)) % 360 )
+                         / ( 360 / (float) n );
+
+  return getBitmap(wind_direction_icon_arr[arr_offset],BitmapSize);
+}
+
+#endif // OWM_USE_BITMAPS
+
+
 /* Returns a pointer to a string that expresses the Compass Point Notation (CPN)
  * of the given windDeg.
  *
@@ -1598,7 +2154,7 @@ const char *getCompassPointNotation(int windDeg)
   return COMPASS_POINT_NOTATION[arr_offset];
 } // end getCompassPointNotation
 
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
 
 // Define the set of moon phase icon base on the chosen moon phase style
 #ifdef MOONPHASE_PRIMARY
@@ -1632,10 +2188,7 @@ static const unsigned char *moon_phase_icon_arr[] = {
   wi_moon_waning_crescent_5_48x48,
   wi_moon_waning_crescent_6_48x48,
   wi_moon_new_48x48 };
-#endif
-// end MOONPHASE_PRIMARY
-
-#ifdef MOONPHASE_ALTERNATIVE
+#elif defined(MOONPHASE_ALTERNATIVE)
 static const unsigned char *moon_phase_icon_arr[] = {
   wi_moon_alt_new_48x48,
   wi_moon_alt_waxing_crescent_1_48x48,
@@ -1697,9 +2250,7 @@ static const unsigned char *moon_phase_icon_arr24[] = {
   wi_moon_alt_waning_crescent_5_24x24,
   wi_moon_alt_waning_crescent_6_24x24,
   wi_moon_alt_new_24x24 };
-
 #endif
-// end MOONPHASE_ALTERNATIVE
 
 /*  Returns the 48x48 moon phase icon bitmap based on api response between 0 and 1
  *  0 and 1 means new moon
@@ -1718,7 +2269,7 @@ const uint8_t *getMoonPhaseBitmap24(const owm_daily_t &daily)
   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
     return moon_phase_icon_arr24[n];
 } // end getMoonPhaseBitmap24
-#endif   // TTF_PATH_WEATHER_ICONS
+#endif   // OWM_USE_BITMAPS
 
 // Returns the current moon phase string
 const char *DrawOWM::getMoonPhaseStr(const owm_daily_t &daily)

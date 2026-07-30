@@ -15,13 +15,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <DrawOWM.h>
 #include "locale_en_US.inc"
 #include "_strftime.h"
 #include "api_response.h"
 #include "config.h"
 #include "conversions.h"
 #include "display_utils.h"
-#include <DrawOWM.h>
+#include "icons/icons.h"
+#include "icons/icon_bitmaps.h"
 
 #define ENABLE_LOGGING  0
 #if ENABLE_LOGGING && __has_include("logging.h") 
@@ -242,7 +244,7 @@ void DrawOWM::drawCurrentSunrise(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_sunrise_24x24;
@@ -282,7 +284,7 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
   int PosY = static_cast<int>(config.PosWind / 2);
   const unsigned char *IconBitmap = NULL;
 
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_strong_wind_24x24;
@@ -293,9 +295,9 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
         IconBitmap = wi_strong_wind_48x48;
         break;
   }
-  #else
+#else
   IconBitmap = getBitmap(wi_strong_wind,WI_SZ);
-  #endif
+#endif
 
   // icons
   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,
@@ -309,10 +311,13 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
   // wind
   setFreeFont(ValueFont);
 #ifdef WIND_INDICATOR_ARROW
+
+  IconBitmap = getWindBitmap24(current.wind_deg);
+
   if(config.DisplayWidth >= 640) {
      drawInvertedBitmap(WI_LOFF + (WI_COL * PosX),
-                        WI_Y0 + 24 / 2 + WI_DY * PosY,
-                        getWindBitmap24(current.wind_deg),24, 24, TFT_BLACK);
+                        WI_Y0 + 24 / 2 + WI_DY * PosY,IconBitmap,24,24,TFT_BLACK);
+     FREE_BITMAP(IconBitmap);
   }
 #endif
    switch (config.WindSpeed) {
@@ -393,7 +398,7 @@ void DrawOWM::drawCurrentUVI(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_day_sunny_24x24;
@@ -464,7 +469,7 @@ void DrawOWM::drawCurrentAirQuality(const owm_resp_air_pollution_t &owm_air_poll
   const GFXfont *TempFont;
 
     // icons
-#ifndef TTF_PATH_OWM_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = air_filter_24x24;
@@ -555,7 +560,7 @@ void DrawOWM::drawCurrentInTemp(float inTemp)
   const unsigned char *IconBitmap = NULL;
 
     // icons
-#ifndef TTF_PATH_OWM_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = house_thermometer_24x24;
@@ -610,7 +615,7 @@ void DrawOWM::drawCurrentSunset(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
   // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_sunset_24x24;
@@ -652,7 +657,7 @@ void DrawOWM::drawCurrentHumidity(const owm_current_t &current)
   const GFXfont *TempFont;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_humidity_24x24;
@@ -697,7 +702,7 @@ void DrawOWM::drawCurrentPressure(const owm_current_t &current)
   const unsigned char *IconBitmap = NULL;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_barometer_24x24;
@@ -792,7 +797,7 @@ void DrawOWM::drawCurrentVisibility(const owm_current_t &current)
   const GFXfont *TempFont;
 
     // icons
-#ifndef TTF_PATH_OWM_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = visibility_icon_24x24;
@@ -861,7 +866,7 @@ void DrawOWM::drawCurrentInHumidity(float inHumidity)
   const GFXfont *TempFont;
 
     // icons
-#ifndef TTF_PATH_OWM_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = house_humidity_24x24;
@@ -912,7 +917,7 @@ void DrawOWM::drawCurrentMoonrise(const owm_daily_t &today)
   const unsigned char *IconBitmap = NULL;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_moonrise_24x24;
@@ -955,7 +960,7 @@ void DrawOWM::drawCurrentMoonset(const owm_daily_t &today)
   const unsigned char *IconBitmap = NULL;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = wi_moonset_24x24;
@@ -998,7 +1003,7 @@ void DrawOWM::drawCurrentMoonphase(const owm_daily_t &daily)
   const GFXfont *TempFont;
 
     // icons
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         IconBitmap = getMoonPhaseBitmap24(daily);
@@ -1066,7 +1071,7 @@ void DrawOWM::drawCurrentDewpoint(const owm_current_t &current)
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         WI_SZ1 = 16;
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
         IconBitmap = wi_thermometer_24x24;
         IconBitmap1 = wi_raindrops_16x16;
 #endif
@@ -1075,14 +1080,14 @@ void DrawOWM::drawCurrentDewpoint(const owm_current_t &current)
      case FORMAT_640X384:
      case FORMAT_800X480:
         WI_SZ1 = 24;
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
         IconBitmap = wi_thermometer_48x48;
         IconBitmap1 = wi_raindrops_24x24;
 #endif
         break;
   }
 
-#ifdef TTF_PATH_WEATHER_ICONS
+#ifndef OWM_USE_BITMAPS
   IconBitmap = getBitmap(wi_thermometer,WI_SZ);
   IconBitmap1 = getBitmap(wi_raindrops,WI_SZ1);
 #endif
@@ -1551,9 +1556,11 @@ void DrawOWM::drawAlerts(std::vector<owm_alerts_t> & alerts,
     // adjust max width to for 48x48 icons
     max_w -= 48;
 
+
     owm_alerts_t &cur_alert = alerts[alert_indices[0]];
-    drawInvertedBitmap(196, 8, getAlertBitmap48(cur_alert), 48, 48,
-                               ACCENT_COLOR);
+    const unsigned char *AlertBitmap = getAlertBitmap48(cur_alert);
+    drawInvertedBitmap(196, 8,AlertBitmap, 48, 48,ACCENT_COLOR);
+    FREE_BITMAP(AlertBitmap);
     // must be called after getAlertBitmap
     toTitleCase(cur_alert.event);
 
@@ -1962,6 +1969,7 @@ void DrawOWM::drawOutlookGraph(
                                                           daily[day_idx]);
         drawInvertedBitmap(xTick - 16, y_b - 32,
                                    bitmap, 32, 32, TFT_BLACK);
+        FREE_BITMAP(bitmap);
       }
 #endif
     }
@@ -2050,7 +2058,7 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   switch (config.DisplayFormat) {
      case FORMAT_400X300:
         RefreshWI_SZ = 24;
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
         IconBitmap = wi_refresh_24x24;
 #endif
         break;
@@ -2058,12 +2066,12 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
      case FORMAT_640X384:
      case FORMAT_800X480:
         RefreshWI_SZ = 32;
-#ifndef TTF_PATH_WEATHER_ICONS
+#ifdef OWM_USE_BITMAPS
         IconBitmap = wi_refresh_32x32;
 #endif
         break;
   }
-#ifdef TTF_PATH_WEATHER_ICONS
+#ifndef OWM_USE_BITMAPS
   IconBitmap = getBitmap(wi_refresh,RefreshWI_SZ);
 #endif
 
@@ -2088,9 +2096,16 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   pos -= getStringWidth(dataStr) + 1;
 #endif
   pos -= 24;
-  drawInvertedBitmap(pos, config.DisplayHeight - 1 - 17,
-                     getBatBitmap24(batPercent), 24, 24, dataColor);
+
+  const unsigned char *Bitmap2 = NULL;
+#ifdef OWM_USE_BITMAPS
+  Bitmap2 = getBatBitmap24(batPercent);
+#else
+  Bitmap2 = getBatBitmap(24,batPercent);
+#endif
+  drawInvertedBitmap(pos,config.DisplayHeight - 1 - 17,Bitmap2,24, 24,dataColor);
   pos -= sp + 9;
+  FREE_BITMAP(Bitmap2);
 #endif
 
   // WiFi
@@ -2110,8 +2125,12 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   pos -= getStringWidth(dataStr) + 1;
 #endif
   pos -= 18;
-  drawInvertedBitmap(pos, config.DisplayHeight - 1 - 13, getWiFiBitmap16(rssi),
-                             16, 16, dataColor);
+  const unsigned char *Bitmap1 = NULL;
+
+  Bitmap1 = getWiFiBitmap16(rssi);
+
+  drawInvertedBitmap(pos,config.DisplayHeight - 1 - 13,Bitmap1,16,16,dataColor);
+  FREE_BITMAP(Bitmap1);
   pos -= sp + 8;
 
   // last refresh
@@ -2127,10 +2146,16 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   dataColor = ACCENT_COLOR;
   if (!statusStr.isEmpty())
   {
+#ifdef OWM_USE_BITMAPS
+     IconBitmap = error_icon_24x24;
+#else
+     IconBitmap = getBitmap(error_icon,24);
+#endif
     drawString(pos, config.DisplayHeight - 1 - 2, statusStr, RIGHT, dataColor);
     pos -= getStringWidth(statusStr) + 24;
-    drawInvertedBitmap(pos, config.DisplayHeight - 1 - 18, error_icon_24x24,
+    drawInvertedBitmap(pos, config.DisplayHeight - 1 - 18, IconBitmap,
                                24, 24, dataColor);
+    FREE_BITMAP(IconBitmap);
   }
 
   return;

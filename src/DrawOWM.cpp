@@ -5,6 +5,7 @@
 #include "config.h"
 #include <DrawOWM.h>
 #include "display_utils.h"
+#include "icons/ttf_data.h"
 
 #define ENABLE_LOGGING  1
 #if ENABLE_LOGGING && __has_include("logging.h") 
@@ -119,14 +120,14 @@ DrawOWM::DrawOWM(TFT_eSprite &epaper,OwmConfig &Config)
    };
 
    SetLocale(&LocaleStrings);
-#ifdef TTF_PATH_WEATHER_ICONS
+#ifndef OWM_USE_BITMAPS
    memset(ttfBitmaps,0,sizeof(ttfBitmaps));
 #endif
 }
 
 DrawOWM::~DrawOWM()
 {
-#ifdef TTF_PATH_WEATHER_ICONS
+#ifndef OWM_USE_BITMAPS
 // Ensure all ttfBitmaps have been free'ed
    for(int i = 0; i < TTF_CACHE_SIZE; i++) {
       if(ttfBitmaps[i] != NULL) {
@@ -135,6 +136,7 @@ DrawOWM::~DrawOWM()
       }
    }
    IconTT.end();
+   OwmIconTT.end();
 #endif
 
 #ifdef TTF_PATH_TEXT
@@ -151,7 +153,7 @@ const char *DrawOWM::DrawIt()
    String statusStr = {};
 
    do {
-#ifdef TTF_SUPPORT
+#ifndef OWM_USE_BITMAPS
       uint8_t Err;
 #ifdef TTF_PATH_WEATHER_ICONS
       IconFile = LittleFS.open(TTF_PATH_WEATHER_ICONS,"r");
@@ -159,17 +161,31 @@ const char *DrawOWM::DrawIt()
          ELOG("setTtfFile returned %d\n",Err);
          break;
       }
+#else
+      LOG("weather_icons_ttf %d bytes @ %p\n",sizeof(weather_icons_ttf),
+          weather_icons_ttf);
+      if(!IconTT.setTtfPointer(weather_icons_ttf,sizeof(weather_icons_ttf),1)) {
+         ELOG("setTtfPointer failed\n");
+      }
+#endif   // TTF_PATH_WEATHER_ICONS
       IconTT.setTextRotation(0);
-#endif
+
 #ifdef TTF_PATH_OWM_ICONS
       OwmIconFile = LittleFS.open(TTF_PATH_OWM_ICONS,"r");
       if ((Err = OwmIconTT.setTtfFile(OwmIconFile)) == 0) {
          ELOG("setTtfFile returned %d\n",Err);
          break;
       }
+#else
+      LOG("owm_icons_ttf %d bytes @ %p\n",sizeof(owm_icons_ttf),
+          owm_icons_ttf);
+      if(!OwmIconTT.setTtfPointer(owm_icons_ttf,sizeof(owm_icons_ttf),1)) {
+         ELOG("setTtfPointer failed\n");
+      }
+#endif   // TTF_PATH_OWM_ICONS
       OwmIconTT.setTextRotation(0);
-#endif
-#endif
+#endif   // OWM_USE_BITMAPS
+
       deserializeOneCall(config.ForecastApiResponse,owm_onecall,
                          config.bDisplayAlerts);
       CurrentTime = (time_t) owm_onecall.current.dt;

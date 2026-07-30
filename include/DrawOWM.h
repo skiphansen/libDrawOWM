@@ -5,7 +5,8 @@
 #include "api_response.h"
 #include "config.h"
 
-#if defined(TTF_PATH_WEATHER_ICONS) || defined(TTF_PATH_TEXT)
+
+#ifndef OWM_USE_BITMAPS
    #include "LittleFS.h"
    #define USING_TTF
    #include <FS.h>
@@ -236,19 +237,16 @@ private:
 #else
       TFT_eSprite &display;
 #endif
+
       OwmConfig &config;
-#ifdef TTF_SUPPORT
+#ifndef OWM_USE_BITMAPS
       truetypeClass IconTT;
       truetypeClass OwmIconTT;
+      truetypeClass TextTT;
       File IconFile;
       File OwmIconFile;
       #define TTF_CACHE_SIZE  4
       uint8_t *ttfBitmaps[TTF_CACHE_SIZE];
-#endif
-
-
-#ifdef TTF_PATH_TEXT
-      truetypeClass TextTT;
 #endif
 
       void drawInit();
@@ -310,7 +308,7 @@ private:
       const char *getMoonPhaseStr(const owm_daily_t &daily);
       size_t _strftime(char *s, size_t maxsize, const char *format,
                        const struct tm *timeptr);
-#ifdef TTF_PATH_WEATHER_ICONS
+#ifndef OWM_USE_BITMAPS
       const unsigned char *getBitmap(int icon, size_t size);
       const uint8_t *getConditionsBitmap(int BitmapSize,int id,bool day,
                                          bool moon, bool cloudy,bool windy);
@@ -322,6 +320,10 @@ private:
                                                       const owm_daily_t  &today);
       const uint8_t *getDailyForecastBitmap(int BitmapSize,
                                                      const owm_daily_t &daily);
+      const uint8_t *getWiFiBitmap16(int rssi);
+      const uint8_t *getAlertBitmap(int BitmapSize,const owm_alerts_t &alert);
+      const uint8_t *getBatBitmap(int BitmapSize,uint32_t batPercent);
+      const uint8_t *getWindBitmap(int BitmapSize,int windDeg);
       void FreeBitMap(uint8_t *BitMap);
 #endif
 
