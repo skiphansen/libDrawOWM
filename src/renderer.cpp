@@ -1593,8 +1593,9 @@ void DrawOWM::drawAlerts(std::vector<owm_alerts_t> & alerts,
     {
       owm_alerts_t &cur_alert = alerts[alert_indices[i]];
 
-      drawInvertedBitmap(196, (i * 32), getAlertBitmap32(cur_alert),
-                                 32, 32, ACCENT_COLOR);
+      const unsigned char *AlertBitmap = getAlertBitmap32(cur_alert);
+      drawInvertedBitmap(196, (i * 32), AlertBitmap,32, 32, ACCENT_COLOR);
+      FREE_BITMAP(AlertBitmap);
       // must be called after getAlertBitmap
       toTitleCase(cur_alert.event);
 
@@ -2289,9 +2290,11 @@ void DrawOWM::getTextBounds(const String &str,int16_t x,int16_t y,int16_t *x1,
 //   LOG("\"%s\" is %d x %d\n",str.c_str(),*w,*h);
 }
 
+#ifdef LOAD_GFXFF
 void DrawOWM::setFreeFont(const GFXfont *f)
 {
    CurrentFont = f;
    display.setFreeFont(f);
 }
+#endif
 

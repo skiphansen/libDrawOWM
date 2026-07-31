@@ -130,9 +130,10 @@ DrawOWM::~DrawOWM()
 #ifndef OWM_USE_BITMAPS
 // Ensure all ttfBitmaps have been free'ed
    for(int i = 0; i < TTF_CACHE_SIZE; i++) {
-      if(ttfBitmaps[i] != NULL) {
-         LOG("Leak: %p @ %d\n",ttfBitmaps[i],i);
-         free(ttfBitmaps[i]);
+      if(ttfBitmaps[i].BitMap != NULL) {
+         LOG("Leak: code point 0x%x @ %p\n",ttfBitmaps[i].CodePoint,
+             ttfBitmaps[i].BitMap);
+         free(ttfBitmaps[i].BitMap);
       }
    }
    IconTT.end();
@@ -162,9 +163,9 @@ const char *DrawOWM::DrawIt()
          break;
       }
 #else
-      LOG("weather_icons_ttf %d bytes @ %p\n",sizeof(weather_icons_ttf),
-          weather_icons_ttf);
-      if(!IconTT.setTtfPointer(weather_icons_ttf,sizeof(weather_icons_ttf),1)) {
+      if(!IconTT.setTtfPointer((uint8_t *) weather_icons_ttf,
+                               sizeof(weather_icons_ttf))) 
+      {
          ELOG("setTtfPointer failed\n");
       }
 #endif   // TTF_PATH_WEATHER_ICONS
@@ -177,9 +178,9 @@ const char *DrawOWM::DrawIt()
          break;
       }
 #else
-      LOG("owm_icons_ttf %d bytes @ %p\n",sizeof(owm_icons_ttf),
-          owm_icons_ttf);
-      if(!OwmIconTT.setTtfPointer(owm_icons_ttf,sizeof(owm_icons_ttf),1)) {
+      if(!OwmIconTT.setTtfPointer((uint8_t *) owm_icons_ttf,
+                                  sizeof(owm_icons_ttf))) 
+      {
          ELOG("setTtfPointer failed\n");
       }
 #endif   // TTF_PATH_OWM_ICONS

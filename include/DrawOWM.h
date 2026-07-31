@@ -246,7 +246,10 @@ private:
       File IconFile;
       File OwmIconFile;
       #define TTF_CACHE_SIZE  4
-      uint8_t *ttfBitmaps[TTF_CACHE_SIZE];
+      struct {
+         uint8_t *BitMap;
+         int CodePoint;
+      } ttfBitmaps[TTF_CACHE_SIZE];
 #endif
 
       void drawInit();
@@ -296,7 +299,9 @@ private:
                          int16_t *y1,uint16_t *w,uint16_t *h);
       int kelvin_to_plot_y(float kelvin, int tempBoundMin, float yPxPerUnit,
                            int yBoundMin);
+#ifdef LOAD_GFXFF
       void setFreeFont(const GFXfont *f);
+#endif
       void setCursor(int16_t x, int16_t y);
       int16_t getCursorX(void);
       int16_t getCursorY(void);
@@ -349,11 +354,13 @@ private:
 // data baseline delta from row base (5 + 24/2)
   uint16_t WI_DDY;
 
+#ifdef LOAD_GFXFF
   const GFXfont *LabelFont;
   const GFXfont *ValueFont;
+  const GFXfont *CurrentFont;
+#endif
   uint16_t MaxX;
   uint16_t MaxY;
-  const GFXfont *CurrentFont;
 
 // LC_TIME
 // locale-based information,

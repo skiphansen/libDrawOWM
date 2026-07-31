@@ -814,9 +814,9 @@ void DrawOWM::FreeBitMap(uint8_t *BitMap)
    if(BitMap != NULL) {
       int i;
       for(i = 0; i < TTF_CACHE_SIZE; i++) {
-         if(ttfBitmaps[i] == BitMap) {
+         if(ttfBitmaps[i].BitMap == BitMap) {
             free(BitMap);
-            ttfBitmaps[i] = NULL;
+            ttfBitmaps[i].BitMap = NULL;
             // LOG("Free %p @ %d\n",BitMap,i);
             break;
          }
@@ -856,7 +856,8 @@ const unsigned char* DrawOWM::getBitmap(int icon, size_t size)
       memset(Ret,0xff,malloc_size); // fill buffer with white
       IconsTT->setFramebuffer(size,size,1,Ret);
       IconsTT->setCharacterSize(ScalledSize);
-      IconsTT->setTextColor(TFT_BLACK,TFT_WHITE);
+   // NB: DO NOT use TFT_* here! We are NOT rendering directly the screen
+      IconsTT->setTextColor(1,0);
       IconsTT->setTextBoundary(0,size,size);
       IconsTT->textDraw(0,0,Icons);
    } while (false);
@@ -864,9 +865,9 @@ const unsigned char* DrawOWM::getBitmap(int icon, size_t size)
    if(Ret != NULL) {
       int i;
       for(i = 0; i < TTF_CACHE_SIZE; i++) {
-         if(ttfBitmaps[i] == NULL) {
-            // LOG("icon 0x%x saved %p @ %d\n",icon,Ret,i);
-            ttfBitmaps[i] = Ret;
+         if(ttfBitmaps[i].BitMap == NULL) {
+            ttfBitmaps[i].CodePoint = icon;
+            ttfBitmaps[i].BitMap = Ret;
             break;
          }
       }
