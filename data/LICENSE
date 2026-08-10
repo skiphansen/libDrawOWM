@@ -1,0 +1,10 @@
+weathericons-regular-webfont.ttf:
+  Retrieved from: https://github.com/erikflowers/weather-icons/blob/master/font/
+  Weather Icons licensed under SIL OFL 1.1: http://scripts.sil.org/OFL
+  Code licensed under MIT License: http://opensource.org/licenses/mit-license.html
+  Documentation licensed under CC BY 3.0: http://creativecommons.org/licenses/by/3.0
+
+owm_icons.ttf:
+  Created by ../icons/create_owm_ttf.py see ../icons/svg/LICENSE, 
+  ../material_svg/LICENSE, and ./online_web_fonts/License.txt for details
+

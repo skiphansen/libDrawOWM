@@ -1,0 +1,4 @@
+*.ttx
+*.html
+__pycache__/
+
