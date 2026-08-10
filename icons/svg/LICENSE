@@ -1,5 +1,3 @@
-Citations:
-
 ********************************************************************************
 'house_temperature.svg', 'house_humidity.svg', and 'house_rainsdrops.svg' were
 created by transforming icons from https://github.com/erikflowers/weather-icons
@@ -9,37 +7,10 @@ with 'house.svg'.
 ********************************************************************************
 
 ********************************************************************************
-weathericons-regular-webfont.ttf in this sub-directory
-  Retrieved from: https://github.com/erikflowers/weather-icons/blob/master/font/
-  Weather Icons licensed under SIL OFL 1.1: http://scripts.sil.org/OFL
-  Code licensed under MIT License: http://opensource.org/licenses/mit-license.html
-  Documentation licensed under CC BY 3.0: http://creativecommons.org/licenses/by/3.0
-********************************************************************************
-
-********************************************************************************
-.svg files prefixed with 'battery' (battery**.svg) and the Visibility Icon
-'visibility_icon.svg' in the sub-directory 'material_svg/'
-  Retrieved from: https://fonts.google.com/icons
-  Licensed under Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0.txt
-********************************************************************************
-
-********************************************************************************
-House Icon 'house.svg' in the sub-directory 'svg'
-  Retrieved from: https://seekicon.com/free-icon/house_16
-  Licensed under MIT License: http://opensource.org/licenses/mit-license.html
-********************************************************************************
-
-********************************************************************************
 .svg files prefixed with 'wifi' (wifi**.svg) in the sub-directory 'svg'
 Warning Alert Icon 'warning_icon.svg' in the sub-directory 'svg'
 Warning Alert Icon 'error_icon.svg' in the sub-directory 'svg'
   Retrieved from: https://github.com/phosphor-icons/homepage
-  Licensed under MIT License: http://opensource.org/licenses/mit-license.html
-********************************************************************************
-
-********************************************************************************
-House Icon 'house.svg' in the sub-directory 'svg'
-  Retrieved from: https://seekicon.com/free-icon/house_16
   Licensed under MIT License: http://opensource.org/licenses/mit-license.html
 ********************************************************************************
 
@@ -55,8 +26,3 @@ House Icon 'house.svg' in the sub-directory 'svg'
   Licensed under CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 ********************************************************************************
 
-********************************************************************************
-The Icons in the sub-directory './online_web_fonts'
-  Retrieved from: https://www.onlinewebfonts.com/icon/251550
-  Licensed under CC BY 3.0: http://creativecommons.org/licenses/by/3.0
-********************************************************************************
