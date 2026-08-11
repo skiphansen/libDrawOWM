@@ -321,7 +321,10 @@ def create_ttf_from_svg():
 
         glyph.correctDirection()
         glyph.round()
+        #if name != 'biological_hazard_symbol' and name != 'ionizing_radiation_symbol':
+        glyph.simplify()
 
+    print('"NaN value in spline creation" errors above are expected, these appear to be benign.')
     #print(f'max bounding box size {max_width}x{max_height}')
     # 4. Generate and save the final TTF file
     font.round()
