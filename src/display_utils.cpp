@@ -68,31 +68,33 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv,bool bLiPo)
       Ret = Ret >= 100 ? 100 : Ret;
    }
    else {
-   // LUT version for CR2450 coin cell (lithium manganese dioxide)
-   // See https://www.flywing-tech.com/blog/everything-you-need-to-know-about-the-cr2450-3v-battery/
-   // LUT is from Google AI, but at least it works, the original calculaton
-   // returned 100% for v < minv !
-      if (v >= 3050) {
-         Ret = 100;
-      }
-      else if (v >= 3000) {
-      // >= 3.00v, 90% -> 100%
-         Ret = 90 + (v - 3000) * 10 /(3200 - 3000);
-      }
-      if (v >= 2900) {
-      // >= 2.90v, 40% -> 90%
-         Ret = 40 + (v - 2900) * 50 /(3000 - 2900);
-      }
-      else if (v >= 2800) {
-      // >= 2.80v, 15% -> 40%
-         Ret = 15 + (v - 2800) * 25 /(2900 - 2800);
-      }
-      else if (v >= 2000) {
-      // >= 2.00v, 0% -> 15%
-         Ret = 10 + (v - 2000) * 15 /(2800 - 2000);
+      const struct {
+         uint32_t v;
+         uint32_t Percent;
+      } Lut[] = {
+      // v, percent of full
+         3050,100,   // >= 3.05v, 100%
+         3000,90,    // >= 3.00v, 90% -> 100%
+         2900,40,    // >= 2.90v, 40% -> 90%
+         2800,15,    // >= 2.80v, 15% -> 40%
+         2000,0,     // >= 2.00v, 0% -> 15%
+         0,0         // < 2.00, 0%
+      };
+
+      if(v > Lut[0].v) {
+         Ret = Lut[0].Percent;
       }
       else {
-         Ret = 0;
+         for(int i = 1; Lut[i].v > 0; i++) {
+            if(v >= Lut[i].v) {
+               uint32_t VChange = Lut[i-1].v - Lut[i].v;
+               uint32_t PercentChange = Lut[i-1].Percent - Lut[i].Percent;
+
+               Ret = Lut[i].Percent;
+               Ret += ((v - Lut[i].v) * PercentChange) / VChange;
+               break;
+            }
+         }
       }
    }
 
@@ -100,11 +102,30 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv,bool bLiPo)
    return Ret;
 } // end calcBatPercent
 
-#ifdef OWM_USE_BITMAPS
+const unsigned char* DrawOWM::getBitmap(int icon, size_t size) 
+{
+   const unsigned char *Ret = getBitmapInternal(icon,size);
 
+   if(Ret == NULL) {
+      ELOG("Returning NULL\n");
+   }
+#ifdef DBG_LOG_BITMAPS
+   else
+#if !defined(OWM_USE_BITMAPS) && defined(TTF_LOGGING)
+   if(OwmIconTT.bLogTTF)
+#endif
+   {
+      LOG_RAW("%d x %d icon 0x%04x:\n",size,size,icon);
+      LogAsciiBitMap(Ret,size);
+   }
+#endif
+   return Ret;
+}
+
+#ifdef OWM_USE_BITMAPS
 /* Returns 24x24 bitmap incidcating battery status.
  */
-const uint8_t *getBatBitmap24(uint32_t batPercent)
+const uint8_t *DrawOWM::getBatBitmap24(uint32_t batPercent)
 {
   if (batPercent >= 93)
   {
@@ -142,34 +163,34 @@ const uint8_t *getBatBitmap24(uint32_t batPercent)
 
 #else
 
+static const uint16_t battery_icon_arr[] = {
+   battery_0_bar_90deg,battery_1_bar_90deg,battery_2_bar_90deg,
+   battery_3_bar_90deg,battery_4_bar_90deg,battery_5_bar_90deg,
+   battery_6_bar_90deg,battery_full_90deg
+};
+
 const uint8_t *DrawOWM::getBatBitmap(int BitmapSize,uint32_t batPercent)
 {
-   icon_name_t icon = battery_0_bar_90deg;
-   if (batPercent >= 93) {
-      icon = battery_full_90deg;
-   }
-   else if (batPercent >= 79) {
-      icon = battery_6_bar_90deg;
-   }
-   else if (batPercent >= 65) {
-      icon = battery_5_bar_90deg;
-   }
-   else if (batPercent >= 50) {
-      icon = battery_4_bar_90deg;
-   }
-   else if (batPercent >= 36) {
-      icon = battery_3_bar_90deg;
-   }
-   else if (batPercent >= 22) {
-      icon = battery_2_bar_90deg;
-   }
-   else if (batPercent >= 8) {
-      icon = battery_1_bar_90deg;
-   }
+// total of 8 battery images from 0% to 100%
+// So each bracket is 12.5%
+   int index = batPercent == 100 ? 7 : (batPercent * 10) / 125;
+   uint16_t BatteryIcon;
 
-   return getBitmap(icon,24);
+   if(index < 0 || index > 7) {
+      ELOG("Invalid index, batPercent %d -> index %d\n",batPercent,index);
+      index = 0;
+   }
+   BatteryIcon = battery_icon_arr[index];
+#if defined(TTF_LOGGING)
+   OwmIconTT.bLogTTF = true;
+#endif
+   const unsigned char *Ret = getBitmap((icon_name_t) BatteryIcon,BitmapSize);
+#if defined(TTF_LOGGING)
+   OwmIconTT.bLogTTF = false;
+#endif
+
+   return Ret;
 }
-
 #endif   // OWM_USE_BITMAPS
 
 /* Gets string with the current date.
@@ -431,11 +452,45 @@ const char *DrawOWM::getWiFidesc(int rssi)
   }
 } // end getWiFidesc
 
-#ifdef OWM_USE_BITMAPS
-/* Returns 16x16 bitmap incidcating wifi status.
- */
+// We always use bitmaps for the Wifi icons because TTF renders 
+// poorly at 16 x 16,
+
+/* 
+From https://www.hbkworld.com/en/knowledge/resource-center/articles/microstrain-by-hbk-guide-to-optimal-rf-performance 
+ 
+for IEEE 802.15.4 
+ 
+RSSI	Signal Strength
+-30 dBm	Excellent
+-67 dBm	Good
+-70 dBm	Okay
+-80 dBm	Not good
+-90 dBm	Unusable 
+*/ 
 const uint8_t *getWiFiBitmap16(int rssi)
 {
+#if RSSI_802_15_4
+   if (rssi == 0)
+   {
+     return wifi_x_16x16;
+   }
+   else if (rssi >= -30)
+   {
+     return wifi_16x16;
+   }
+   else if (rssi >= -67)
+   {
+     return wifi_3_bar_16x16;
+   }
+   else if (rssi >= -70)
+   {
+     return wifi_2_bar_16x16;
+   }
+   else
+   {  // rssi < -80
+     return wifi_1_bar_16x16;
+   }
+#else
   if (rssi == 0)
   {
     return wifi_x_16x16;
@@ -456,29 +511,8 @@ const uint8_t *getWiFiBitmap16(int rssi)
   {  // rssi < -70
     return wifi_1_bar_16x16;
   }
-} // end getWiFiBitmap24
-
-#else
-
-const uint8_t *DrawOWM::getWiFiBitmap16(int rssi) 
-{
-   icon_name_t icon = wifi_1_bar;
-   if (rssi == 0) {
-      icon =  wifi_x;
-   }
-   else if (rssi >= -50) {
-      icon =  wifi;
-   }
-   else if (rssi >= -60) {
-      icon =  wifi_3_bar;
-   }
-   else if (rssi >= -70) {
-      icon =  wifi_2_bar;
-   }
-   return getBitmap(icon,16);
+#endif
 }
-
-#endif   // OWM_USE_BITMAPS
 
 /* Returns true if icon is a daytime icon, false otherwise.
  */
@@ -536,7 +570,7 @@ bool isWindy(float wind_speed, float wind_gust) {
  */
 #ifdef OWM_USE_BITMAPS
 template <int BitmapSize>
-const uint8_t *getConditionsBitmap(
+const uint8_t *DrawOWM::getConditionsBitmap(
    int id, bool day, bool moon, bool cloudy,bool windy)
 #else
 const uint8_t *DrawOWM::getConditionsBitmap(
@@ -690,8 +724,8 @@ const uint8_t *DrawOWM::getConditionsBitmap(
  *
  * The daily weather forcast of today is needed for moonrise and moonset times.
  */
-const uint8_t *getHourlyForecastBitmap32(const owm_hourly_t &hourly,
-                                         const owm_daily_t  &today)
+const uint8_t *DrawOWM::getHourlyForecastBitmap32(
+   const owm_hourly_t &hourly,const owm_daily_t  &today)
 {
   const int id = hourly.weather.id;
   const bool day = isDay(hourly.weather.icon);
@@ -705,7 +739,7 @@ const uint8_t *getHourlyForecastBitmap32(const owm_hourly_t &hourly,
 /* Takes the daily weather forecast (from OpenWeatherMap API response) and
  * returns a pointer to the icon's 64x64 bitmap.
  */
-const uint8_t *getDailyForecastBitmap64(const owm_daily_t &daily)
+const uint8_t *DrawOWM::getDailyForecastBitmap64(const owm_daily_t &daily)
 {
   const int id = daily.weather.id;
   // always show daytime icon for daily forecast
@@ -716,7 +750,7 @@ const uint8_t *getDailyForecastBitmap64(const owm_daily_t &daily)
   return getConditionsBitmap<64>(id, day, moon, cloudy, windy);
 } // end getForecastBitmap64
 
-const uint8_t *getDailyForecastBitmap32(const owm_daily_t &daily)
+const uint8_t *DrawOWM::getDailyForecastBitmap32(const owm_daily_t &daily)
 {
   const int id = daily.weather.id;
   // always show daytime icon for daily forecast
@@ -733,8 +767,8 @@ const uint8_t *getDailyForecastBitmap32(const owm_daily_t &daily)
  *
  * The daily weather forcast of today is needed for moonrise and moonset times.
  */
-const uint8_t *getCurrentConditionsBitmap196(const owm_current_t &current,
-                                             const owm_daily_t   &today)
+const uint8_t *DrawOWM::getCurrentConditionsBitmap196(
+   const owm_current_t &current,const owm_daily_t   &today)
 {
   const int id = current.weather.id;
   const bool day = isDay(current.weather.icon);
@@ -745,8 +779,8 @@ const uint8_t *getCurrentConditionsBitmap196(const owm_current_t &current,
   return getConditionsBitmap<196>(id, day, moon, cloudy, windy);
 } // end getCurrentConditionsBitmap196
 
-const uint8_t *getCurrentConditionsBitmap96(const owm_current_t &current,
-                                             const owm_daily_t   &today)
+const uint8_t *DrawOWM::getCurrentConditionsBitmap96(
+   const owm_current_t &current,const owm_daily_t &today)
 {
   const int id = current.weather.id;
   const bool day = isDay(current.weather.icon);
@@ -809,13 +843,22 @@ const uint8_t *DrawOWM::getCurrentConditionsBitmap(
    return getConditionsBitmap(BitmapSize,id, day, moon, cloudy, windy);
 }
 
-void DrawOWM::FreeBitMap(uint8_t *BitMap)
+void DrawOWM::FreeBitMap(uint8_t **pBitMap)
 {
-   if(BitMap != NULL) {
+   uint8_t *BitMap = NULL;
+
+   if(pBitMap == NULL) {
+      ELOG("pBitMap == NULL\n");
+   }
+   else if((BitMap = *pBitMap) == NULL) {
+      ELOG("Attempt to free already free'ed bitmap\n");
+   }
+   else {
       int i;
       for(i = 0; i < TTF_CACHE_SIZE; i++) {
          if(ttfBitmaps[i].BitMap == BitMap) {
             free(BitMap);
+            *pBitMap = NULL;
             ttfBitmaps[i].BitMap = NULL;
             // LOG("Free %p @ %d\n",BitMap,i);
             break;
@@ -828,7 +871,7 @@ void DrawOWM::FreeBitMap(uint8_t *BitMap)
 }
 
 
-const unsigned char* DrawOWM::getBitmap(int icon, size_t size) 
+const unsigned char* DrawOWM::getBitmapInternal(int icon, size_t size) 
 {
    wchar_t Icons[2] = {(wchar_t) icon,0};
    int malloc_size = size * ((size + 7) / 8);
@@ -877,6 +920,7 @@ const unsigned char* DrawOWM::getBitmap(int icon, size_t size)
    }
    return Ret;
 }
+
 
 // Define the set of moon phase icon base on the chosen moon phase style
 #ifdef MOONPHASE_PRIMARY

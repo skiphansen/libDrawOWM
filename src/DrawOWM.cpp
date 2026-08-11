@@ -291,3 +291,21 @@ void DrawOWM::SetLocale(LocaleStrings_t *p)
    }
 }
 
+void DrawOWM::LogAsciiBitMap(const uint8_t *Bitmap,int Size)
+{
+   if(Size < 80) {
+      int BytesPerLine = ((Size + 7) / 8);
+      for(int i = 0; i < Size; i++) {
+         for(int j = 0; j < BytesPerLine; j++) {
+            uint8_t Mask = 0x80;
+            uint8_t Value = *Bitmap++;
+            for(int k = 0; k < 8; k++) {
+               LOG_RAW("%c",(Value & Mask) == 0 ? '*' : ' ');
+               Mask >>= 1;
+            }
+         }
+         LOG_RAW("| line %d\n",i + 1);
+      }
+   }
+}
+

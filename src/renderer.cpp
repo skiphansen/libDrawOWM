@@ -2054,6 +2054,7 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
   const int sp = 2;
   const unsigned char *IconBitmap = NULL;
   uint16_t RefreshWI_SZ = 0;
+  uint16_t DisplayHeight = config.DisplayHeight;
 
   LOG("\n");
   switch (config.DisplayFormat) {
@@ -2093,7 +2094,7 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
 #if STATUS_BAR_EXTRAS_BAT_VOLTAGE
   dataStr += " (" + String( std::round(batVoltage / 10.f) / 100.f, 2 ) + "v)";
 #endif
-  drawString(pos, config.DisplayHeight - 1 - 2, dataStr, RIGHT, dataColor);
+  drawString(pos,DisplayHeight - 1 - 2, dataStr, RIGHT, dataColor);
   pos -= getStringWidth(dataStr) + 1;
 #endif
   pos -= 24;
@@ -2104,7 +2105,8 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
 #else
   Bitmap2 = getBatBitmap(24,batPercent);
 #endif
-  drawInvertedBitmap(pos,config.DisplayHeight - 1 - 17,Bitmap2,24, 24,dataColor);
+
+  drawInvertedBitmap(pos,DisplayHeight - 1 - 17,Bitmap2,24,24,dataColor);
   pos -= sp + 9;
   FREE_BITMAP(Bitmap2);
 #endif
@@ -2122,24 +2124,20 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
     dataStr += " (" + String(rssi) + "dBm)";
   }
 #endif
-  drawString(pos, config.DisplayHeight - 1 - 2, dataStr, RIGHT, dataColor);
+  drawString(pos,DisplayHeight - 1 - 2, dataStr, RIGHT, dataColor);
   pos -= getStringWidth(dataStr) + 1;
 #endif
   pos -= 18;
-  const unsigned char *Bitmap1 = NULL;
-
-  Bitmap1 = getWiFiBitmap16(rssi);
-
-  drawInvertedBitmap(pos,config.DisplayHeight - 1 - 13,Bitmap1,16,16,dataColor);
-  FREE_BITMAP(Bitmap1);
+  drawInvertedBitmap(pos,DisplayHeight - 1 - 13,getWiFiBitmap16(rssi),
+                     16,16,dataColor);
   pos -= sp + 8;
 
   // last refresh
   dataColor = TFT_BLACK;
-  drawString(pos, config.DisplayHeight - 1 - 2, refreshTimeStr, RIGHT, dataColor);
+  drawString(pos,DisplayHeight - 1 - 2,refreshTimeStr, RIGHT, dataColor);
   pos -= getStringWidth(refreshTimeStr) + 25;
-  drawInvertedBitmap(pos,config.DisplayHeight - 1 - 21,IconBitmap,
-                     RefreshWI_SZ,RefreshWI_SZ,dataColor);
+  drawInvertedBitmap(pos,DisplayHeight - 1 - 21,IconBitmap,RefreshWI_SZ,
+                     RefreshWI_SZ,dataColor);
   FREE_BITMAP(IconBitmap);
   pos -= sp;
 
@@ -2152,14 +2150,11 @@ void DrawOWM::drawStatusBar(const String &statusStr, const String &refreshTimeSt
 #else
      IconBitmap = getBitmap(error_icon,24);
 #endif
-    drawString(pos, config.DisplayHeight - 1 - 2, statusStr, RIGHT, dataColor);
+    drawString(pos,DisplayHeight - 1 - 2, statusStr, RIGHT, dataColor);
     pos -= getStringWidth(statusStr) + 24;
-    drawInvertedBitmap(pos, config.DisplayHeight - 1 - 18, IconBitmap,
-                               24, 24, dataColor);
+    drawInvertedBitmap(pos,DisplayHeight - 1 - 18, IconBitmap,24,24,dataColor);
     FREE_BITMAP(IconBitmap);
   }
-
-  return;
 } // end drawStatusBar
 
 /* This function is responsible for drawing prominent error messages to the

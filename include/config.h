@@ -154,6 +154,9 @@
 #define STATUS_BAR_EXTRAS_WIFI_STRENGTH  1
 #define STATUS_BAR_EXTRAS_WIFI_RSSI      0
 
+#define RSSI_802_15_4   1
+
+
 // BATTERY MONITORING
 //   You may choose to power your weather display with or without a battery.
 //   Low power behavior can be controlled in config.cpp.

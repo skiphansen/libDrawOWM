@@ -1,13 +1,14 @@
-#ifdef OWM_USE_BITMAPS
 #ifndef _ICON_BITMAPS_H_
 #define _ICON_BITMAPS_H_
-extern const unsigned char wi_raindrops_16x16[];
-extern const unsigned char wi_raindrops_24x24[];
 extern const unsigned char wifi_16x16[];
 extern const unsigned char wifi_1_bar_16x16[];
 extern const unsigned char wifi_2_bar_16x16[];
 extern const unsigned char wifi_3_bar_16x16[];
 extern const unsigned char wifi_x_16x16[];
+
+#ifdef OWM_USE_BITMAPS
+extern const unsigned char wi_raindrops_16x16[];
+extern const unsigned char wi_raindrops_24x24[];
 extern const unsigned char wifi_x_96x96[];
 extern const unsigned char wi_cloud_32x32[];
 extern const unsigned char wi_cloud_64x64[];
@@ -361,6 +362,6 @@ extern const unsigned char wi_tsunami_48x48[];
 extern const unsigned char battery_alert_0deg_96x96[];
 extern const unsigned char wi_cloud_down_96x96[];
 extern const unsigned char wi_time_4_96x96[];
-#endif   // _ICON_BITMAPS_H_
 #endif   // OWM_USE_BITMAPS
+#endif   // _ICON_BITMAPS_H_
 

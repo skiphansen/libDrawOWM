@@ -148,8 +148,8 @@ typedef enum icon_name {
   warning_icon = 0xf110,
 } icon_name_t;
 
-#ifndef TTF_PATH_WEATHER_ICONS
-constexpr const unsigned char* getBitmap(icon_name_t icon, size_t size)
+#ifdef OWM_USE_BITMAPS
+constexpr const unsigned char* getBitmapInternal(icon_name_t icon, size_t size)
 {
   switch (icon) {
   case wi_raindrops:
