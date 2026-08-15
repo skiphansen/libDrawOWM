@@ -1031,7 +1031,7 @@ uint16_t getMoonPhaseIcon(const owm_daily_t &daily)
  * If a relevant category can not be determined, the default alert bitmap will
  * be returned. (warning triangle icon)
  */
-const uint8_t *getAlertBitmap32(const owm_alerts_t &alert)
+const uint8_t *DrawOWM::getAlertBitmap32(const owm_alerts_t &alert)
 {
   enum alert_category c = getAlertCategory(alert);
   switch (c)
@@ -1077,7 +1077,7 @@ const uint8_t *getAlertBitmap32(const owm_alerts_t &alert)
  * If a relevant category can not be determined, the default alert bitmap will
  * be returned. (warning triangle icon)
  */
-const uint8_t *getAlertBitmap48(const owm_alerts_t &alert)
+const uint8_t *DrawOWM::getAlertBitmap48(const owm_alerts_t &alert)
 {
   enum alert_category c = getAlertCategory(alert);
   switch (c)
@@ -1726,7 +1726,7 @@ static const unsigned char *wind_direction_icon_arr[] = {
  * Parameter is meteorological wind direction, arrow points in the direction the
  * wind is going.
  */
-const uint8_t *getWindBitmap24(int windDeg)
+const uint8_t *DrawOWM::getWindBitmap24(int windDeg)
 {
   windDeg %= 360; // enforce domain
   // number of directions
@@ -2321,13 +2321,13 @@ static const unsigned char *moon_phase_icon_arr24[] = {
  *  scale range to match 28 numbers of different icons
  *  offset +0.5 to shift icon to center of moon phase period
 */
-const uint8_t *getMoonPhaseBitmap48(const owm_daily_t &daily)
+const uint8_t *DrawOWM::getMoonPhaseBitmap48(const owm_daily_t &daily)
 {
   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
     return moon_phase_icon_arr[n];
 } // end getMoonPhaseBitmap48
 
-const uint8_t *getMoonPhaseBitmap24(const owm_daily_t &daily)
+const uint8_t *DrawOWM::getMoonPhaseBitmap24(const owm_daily_t &daily)
 {
   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
     return moon_phase_icon_arr24[n];

@@ -149,7 +149,7 @@ typedef enum icon_name {
 } icon_name_t;
 
 #ifdef OWM_USE_BITMAPS
-constexpr const unsigned char* getBitmapInternal(icon_name_t icon, size_t size)
+constexpr const unsigned char* getBitmapInternal(int icon, size_t size)
 {
   switch (icon) {
   case wi_raindrops:
