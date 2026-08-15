@@ -877,12 +877,31 @@ const unsigned char* DrawOWM::getBitmapInternal(int icon, size_t size)
    int malloc_size = size * ((size + 7) / 8);
    truetypeClass *IconsTT;
    int ScalledSize = size;
+   uint16_t x0 = 0;
 
    if(icon > wi_day_cloudy_gusts && icon <= wi_moon_alt_new){
+   // Weather icons are right justified and extend outside of a 
+   // <size> x <size> bounding box.
+   // The layout code expects the icon to be centered within 
+   // the bounding box.
+     ttGlyph_t glyph;
      IconsTT = &IconTT;
-  // Scale requested size to icon fits in size x size pixel box
-  // xRange 3143 yRange 2923 unitsPerEm 2048
-     ScalledSize = (size * 2048) / 3143;
+  // Scale requested size so icon fits in the bounding box
+  // Values determined by examining the TTF file: xRange 3143, 
+  // yRange 2923, unitsPerEm 2048
+     int unitsPerEm = 2048;
+     int xRange = 3143;
+     ScalledSize = (size * unitsPerEm) / xRange;
+  // Center the icon in the bounding box
+     IconsTT->readGlyph(icon,&glyph);
+     int Width = glyph.xMax - glyph.xMin;
+     int ScalledWidth = ((Width * ScalledSize) / xRange);
+
+     x0 = (ScalledSize - ScalledWidth) / 2;
+#if 0
+     LOG("codepoint 0x%x: size %d ScalledSize %d ScalledWidth %d x0 %d\n",
+         icon,size,ScalledSize,ScalledWidth,x0);
+#endif
    }
    else {
      // LOG("Getting OwmIconTT icon 0x%04x\n",icon);
@@ -895,14 +914,13 @@ const unsigned char* DrawOWM::getBitmapInternal(int icon, size_t size)
          ELOG("malloc for 0x%x %d x %d icon failed\n",icon,size,size);
          break;
       }
-//    LOG("bitmap for %d x %d icon 0x%x created @ %p\n",size,size,icon,Ret);
       memset(Ret,0xff,malloc_size); // fill buffer with white
       IconsTT->setFramebuffer(size,size,1,Ret);
       IconsTT->setCharacterSize(ScalledSize);
    // NB: DO NOT use TFT_* here! We are NOT rendering directly the screen
       IconsTT->setTextColor(1,0);
-      IconsTT->setTextBoundary(0,size,size);
-      IconsTT->textDraw(0,0,Icons);
+      IconsTT->setTextBoundary(x0,size,size);
+      IconsTT->textDraw(x0,0,Icons);
    } while (false);
 
    if(Ret != NULL) {
