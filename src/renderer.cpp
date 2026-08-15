@@ -311,10 +311,8 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
   // wind
   setFreeFont(ValueFont);
 #ifdef WIND_INDICATOR_ARROW
-
-  IconBitmap = getWindBitmap24(current.wind_deg);
-
   if(config.DisplayWidth >= 640) {
+     IconBitmap = getWindBitmap24(current.wind_deg);
      drawInvertedBitmap(WI_LOFF + (WI_COL * PosX),
                         WI_Y0 + 24 / 2 + WI_DY * PosY,IconBitmap,24,24,TFT_BLACK);
      FREE_BITMAP(IconBitmap);
