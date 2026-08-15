@@ -884,7 +884,7 @@ const unsigned char* DrawOWM::getBitmapInternal(int icon, size_t size)
    // <size> x <size> bounding box.
    // The layout code expects the icon to be centered within 
    // the bounding box.
-     ttGlyph_t glyph;
+     ttMetrics_t Metrics;
      IconsTT = &IconTT;
   // Scale requested size so icon fits in the bounding box
   // Values determined by examining the TTF file: xRange 3143, 
@@ -893,8 +893,8 @@ const unsigned char* DrawOWM::getBitmapInternal(int icon, size_t size)
      int xRange = 3143;
      ScalledSize = (size * unitsPerEm) / xRange;
   // Center the icon in the bounding box
-     IconsTT->readGlyph(icon,&glyph);
-     int Width = glyph.xMax - glyph.xMin;
+     IconsTT->getMetrics(icon,&Metrics);
+     int Width = Metrics.xMax - Metrics.xMin;
      int ScalledWidth = ((Width * ScalledSize) / xRange);
 
      x0 = (ScalledSize - ScalledWidth) / 2;
