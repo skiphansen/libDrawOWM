@@ -264,7 +264,9 @@ def create_ttf_from_svg():
                 match = deg_re.match(name)
                 if match:
                     angle = float(match.group(1))
-            rotate_glyph(glyph,-angle)
+            rotation = (angle+180) % 360
+            print(f'angle {angle} rotation {rotation}')
+            rotate_glyph(glyph,-rotation)
 
         glyph.glyphname = name
         mapping_records.append((name, hex(unicode_dec)))
