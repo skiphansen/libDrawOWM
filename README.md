@@ -35,6 +35,8 @@ Since most users of OpenEPaperLink flash their boards with release binaries
 rather than building from source it is important to be able to configure
 the language and measurement units at run time rather than compile time.
 
+If you would like to help test the OpenEPaperLink OWM support a Beta release is available.  Installation instructions can be found [here](https://github.com/skiphansen/OpenEPaperLink/wiki/Installing-OpenWeatherMap-Beta).
+
 ## Example 800 x 480 (7.4") screen layout
 
 <img width="1265" height="845" alt="image" src="https://github.com/user-attachments/assets/a369f6de-06bc-40f8-95a8-dbbfd61dfe6b" />
