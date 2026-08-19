@@ -135,11 +135,16 @@ typedef struct {
    int8_t PosMoonset;
    int8_t PosMoonphase;
    int8_t PosDewpoint;
+   int8_t PosHighTide;
+   int8_t PosLowTide;
    uint16_t DisplayWidth;
    uint16_t DisplayHeight;
    int16_t xOffset;
    int16_t yOffset;
-
+   int64_t LowTide;        // Low tide time, Unix, UTC
+   int64_t HighTide;       // High tide time, Unix, UTC
+   float LowTideHeight;
+   float HighTideHeight;
    float inTemp;
    float inHumidity;
    uint16_t batteryVoltage;
@@ -177,6 +182,8 @@ typedef struct {
    const char *TXT_INDOOR_TEMPERATURE;
    const char *TXT_INDOOR_HUMIDITY;
    const char *TXT_DEWPOINT;
+   const char *TXT_LOWTIDE;
+   const char *TXT_HIGHTIDE;
    const char *TXT_MOONPHASE;
    const char *TXT_NEW_MOON;
    const char *TXT_WAXING_CRESCENT;
@@ -278,6 +285,8 @@ private:
       void drawCurrentMoonset(const owm_daily_t &today);
       void drawCurrentMoonphase(const owm_daily_t &daily);
       void drawCurrentDewpoint(const owm_current_t &current);
+      void drawCurrentTide(int8_t Position,bool bHighTide);
+
       void drawCurrentConditions(const owm_current_t &current,
                                  const owm_daily_t &today,
                                  const owm_resp_air_pollution_t &owm_air_pollution,
@@ -437,6 +446,8 @@ private:
    const char *TXT_INDOOR_TEMPERATURE;
    const char *TXT_INDOOR_HUMIDITY;
    const char *TXT_DEWPOINT;
+   const char *TXT_LOWTIDE;
+   const char *TXT_HIGHTIDE;
 // MOON PHASE
    const char *TXT_MOONPHASE;
    const char *TXT_NEW_MOON;

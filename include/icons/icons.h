@@ -146,6 +146,8 @@ typedef enum icon_name {
   biological_hazard_symbol = 0xf10e,
   ionizing_radiation_symbol = 0xf10f,
   warning_icon = 0xf110,
+  low_tide_icon = 0xf111,
+  high_tide_icon = 0xf112
 } icon_name_t;
 
 #ifdef OWM_USE_BITMAPS

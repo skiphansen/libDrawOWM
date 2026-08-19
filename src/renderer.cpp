@@ -1123,7 +1123,35 @@ void DrawOWM::drawCurrentDewpoint(const owm_current_t &current)
   dataStr += "\260";
   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY, dataStr, LEFT);
 } 
-// end drawCurrentDewpoint
+
+void DrawOWM::drawCurrentTide(int8_t Position,bool bHighTide)
+{
+#ifdef OWM_USE_BITMAPS
+   LOG("Tides not supported in BITMAP mode\n");
+#else
+   String dataStr, unitStr;
+   int PosX = Position % 2;
+   int PosY = static_cast<int>(Position / 2);
+   const unsigned char *IconBitmap = NULL;
+
+   IconBitmap = getBitmap(bHighTide ? high_tide_icon: low_tide_icon,WI_SZ);
+   drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,IconBitmap,
+                      WI_SZ,WI_SZ,TFT_BLACK);
+   FREE_BITMAP(IconBitmap);
+   // labels
+   setFreeFont(LabelFont);
+   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_LDY + WI_DY * PosY, 
+              bHighTide ? TXT_HIGHTIDE : TXT_LOWTIDE,LEFT);
+
+   // sunrise
+   setFreeFont(ValueFont);
+   char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
+   time_t ts = bHighTide ? config.HighTide : config.LowTide;
+   tm *timeInfo = localtime(&ts);
+   _strftime(timeBuffer, sizeof(timeBuffer),config.TimeFormat, timeInfo);
+   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY, timeBuffer, LEFT);
+#endif
+}
 
 //End defining functions for left panel.
 
@@ -1329,6 +1357,16 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
    if (config.PosDewpoint >= 0) {
       LOG("Calling drawCurrentDewpoint\n");
       drawCurrentDewpoint(current);
+   }
+
+   if(config.PosLowTide > 0) {
+      LOG("Calling drawCurrentTide for low tide\n");
+      drawCurrentTide(config.PosLowTide,false);
+   }
+
+   if(config.PosHighTide > 0) {
+      LOG("Calling drawCurrentTide for high tide\n");
+      drawCurrentTide(config.PosHighTide,true);
    }
    // end drawing left panel
 } // end drawCurrentConditions

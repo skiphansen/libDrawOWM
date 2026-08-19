@@ -64,6 +64,8 @@ DrawOWM::DrawOWM(TFT_eSprite &epaper,OwmConfig &Config)
       .TXT_INDOOR_TEMPERATURE = "Temperature",
       .TXT_INDOOR_HUMIDITY    = "Humidity",
       .TXT_DEWPOINT           = "Dew Point",
+      .TXT_LOWTIDE            = "Low Tide",
+      .TXT_HIGHTIDE           = "High Tide",
 
    // MOON PHASE
       .TXT_MOONPHASE       = "Moon Phase",
@@ -118,6 +120,8 @@ DrawOWM::DrawOWM(TFT_eSprite &epaper,OwmConfig &Config)
       .TXT_UNITS_PRECIP_CENTIMETERS = "cm",
       .TXT_UNITS_PRECIP_INCHES      = "in"
    };
+   config.LowTideHeight = std::nanf("");
+   config.HighTideHeight = std::nanf("");
 
    SetLocale(&LocaleStrings);
 #ifndef OWM_USE_BITMAPS
@@ -247,6 +251,8 @@ void DrawOWM::SetLocale(LocaleStrings_t *p)
       SET_LOCALE_STRING(TXT_INDOOR_TEMPERATURE);
       SET_LOCALE_STRING(TXT_INDOOR_HUMIDITY);
       SET_LOCALE_STRING(TXT_DEWPOINT);
+      SET_LOCALE_STRING(TXT_LOWTIDE);
+      SET_LOCALE_STRING(TXT_HIGHTIDE);
       SET_LOCALE_STRING(TXT_MOONPHASE);
       SET_LOCALE_STRING(TXT_NEW_MOON);
       SET_LOCALE_STRING(TXT_WAXING_CRESCENT);
