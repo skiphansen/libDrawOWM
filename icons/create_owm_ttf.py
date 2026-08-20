@@ -271,6 +271,10 @@ def create_ttf_from_svg():
         glyph.glyphname = name
         mapping_records.append((name, hex(unicode_dec)))
 
+        if name.startswith('tide'):
+        # the tide symbols are a bit large, reduce them to match other icons
+            glyph.transform(psMat.scale(.8))
+
         #glyph.transform(offset_matrix)
         # 3. Determine the bounding box of the imported SVG 
         # (returns (xmin, ymin, xmax, ymax))
@@ -299,7 +303,8 @@ def create_ttf_from_svg():
 
         #print(f'{name}: shift_x {shift_x} shift_y {shift_y}')
         # 7. Apply the transformation and clean up overlaps
-        glyph.transform((1, 0, 0, 1, shift_x, shift_y))
+
+        glyph.transform(psMat.translate(shift_x,shift_y))
         glyph.removeOverlap()
 
         new_bounds = glyph.boundingBox()
