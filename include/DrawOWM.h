@@ -135,8 +135,8 @@ typedef struct {
    int8_t PosMoonset;
    int8_t PosMoonphase;
    int8_t PosDewpoint;
-   int8_t PosHighTide;
-   int8_t PosLowTide;
+   int8_t PosLastTide;
+   int8_t PosNextTide;
    uint16_t DisplayWidth;
    uint16_t DisplayHeight;
    int16_t xOffset;
@@ -285,7 +285,7 @@ private:
       void drawCurrentMoonset(const owm_daily_t &today);
       void drawCurrentMoonphase(const owm_daily_t &daily);
       void drawCurrentDewpoint(const owm_current_t &current);
-      void drawCurrentTide(int8_t Position,bool bHighTide);
+      void drawCurrentTide(int8_t Position,bool bNextTide);
 
       void drawCurrentConditions(const owm_current_t &current,
                                  const owm_daily_t &today,

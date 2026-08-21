@@ -1124,7 +1124,7 @@ void DrawOWM::drawCurrentDewpoint(const owm_current_t &current)
   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY, dataStr, LEFT);
 } 
 
-void DrawOWM::drawCurrentTide(int8_t Position,bool bHighTide)
+void DrawOWM::drawCurrentTide(int8_t Position,bool bNextTide)
 {
 #ifdef OWM_USE_BITMAPS
    LOG("Tides not supported in BITMAP mode\n");
@@ -1133,23 +1133,49 @@ void DrawOWM::drawCurrentTide(int8_t Position,bool bHighTide)
    int PosX = Position % 2;
    int PosY = static_cast<int>(Position / 2);
    const unsigned char *IconBitmap = NULL;
+   icon_name_t Icon;
+   String Type;
+   time_t ts;
+   struct tm TimeinfoToday;
 
-   IconBitmap = getBitmap(bHighTide ? high_tide_icon: low_tide_icon,WI_SZ);
+   time_t TempTime = (time_t) config.LowTide;
+   localtime_r(&TempTime,&TimeinfoToday);
+   LOG("Low tide %d:%02d\n\n",TimeinfoToday.tm_hour,TimeinfoToday.tm_min);
+
+   TempTime = (time_t) config.HighTide;
+   localtime_r(&TempTime,&TimeinfoToday);
+   LOG("High tide %d:%02d\n\n",TimeinfoToday.tm_hour,TimeinfoToday.tm_min);
+   
+
+   if(config.LowTide > config.HighTide) {
+   // Next tide is low tide
+      LOG("Next tide is low tide\n");
+      Icon = bNextTide ? low_tide_icon : high_tide_icon;
+      Type = bNextTide ? TXT_LOWTIDE : TXT_HIGHTIDE;
+      ts = bNextTide ? config.LowTide : config.HighTide;
+   }
+   else {
+   // Next tide is high tide
+      LOG("Next tide is high tide\n");
+      Icon = bNextTide ? high_tide_icon : low_tide_icon;
+      Type = bNextTide ? TXT_HIGHTIDE : TXT_LOWTIDE;
+      ts = bNextTide ? config.HighTide : config.LowTide;
+   }
+
+   IconBitmap = getBitmap(Icon,WI_SZ);
    drawInvertedBitmap(WI_COL * PosX, WI_Y0 + WI_DY * PosY,IconBitmap,
                       WI_SZ,WI_SZ,TFT_BLACK);
    FREE_BITMAP(IconBitmap);
-   // labels
+// label
    setFreeFont(LabelFont);
-   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_LDY + WI_DY * PosY, 
-              bHighTide ? TXT_HIGHTIDE : TXT_LOWTIDE,LEFT);
+   drawString(WI_LOFF + (WI_COL * PosX),WI_Y0 + WI_LDY + WI_DY * PosY,Type,LEFT); 
 
-   // sunrise
    setFreeFont(ValueFont);
    char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
-   time_t ts = bHighTide ? config.HighTide : config.LowTide;
    tm *timeInfo = localtime(&ts);
-   _strftime(timeBuffer, sizeof(timeBuffer),config.TimeFormat, timeInfo);
-   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY, timeBuffer, LEFT);
+   _strftime(timeBuffer, sizeof(timeBuffer),config.TimeFormat,timeInfo);
+   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY,
+              timeBuffer,LEFT);
 #endif
 }
 
@@ -1359,14 +1385,14 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
       drawCurrentDewpoint(current);
    }
 
-   if(config.PosLowTide > 0) {
+   if(config.PosLastTide > 0) {
       LOG("Calling drawCurrentTide for low tide\n");
-      drawCurrentTide(config.PosLowTide,false);
+      drawCurrentTide(config.PosLastTide,false);
    }
 
-   if(config.PosHighTide > 0) {
+   if(config.PosNextTide > 0) {
       LOG("Calling drawCurrentTide for high tide\n");
-      drawCurrentTide(config.PosHighTide,true);
+      drawCurrentTide(config.PosNextTide,true);
    }
    // end drawing left panel
 } // end drawCurrentConditions
