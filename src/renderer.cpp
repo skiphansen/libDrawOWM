@@ -1136,16 +1136,10 @@ void DrawOWM::drawCurrentTide(int8_t Position,bool bNextTide)
    icon_name_t Icon;
    String Type;
    time_t ts;
-   struct tm TimeinfoToday;
 
-   time_t TempTime = (time_t) config.LowTide;
-   localtime_r(&TempTime,&TimeinfoToday);
-   LOG("Low tide %d:%02d\n\n",TimeinfoToday.tm_hour,TimeinfoToday.tm_min);
-
-   TempTime = (time_t) config.HighTide;
-   localtime_r(&TempTime,&TimeinfoToday);
-   LOG("High tide %d:%02d\n\n",TimeinfoToday.tm_hour,TimeinfoToday.tm_min);
-   
+   LOG("bNextTide %d\n",bNextTide);
+   LOG("Low tide @ %s",ctime((time_t *) &config.LowTide));
+   LOG("Hight tide @ %s",ctime((time_t *) &config.HighTide));
 
    if(config.LowTide > config.HighTide) {
    // Next tide is low tide
@@ -1386,12 +1380,12 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
    }
 
    if(config.PosLastTide > 0) {
-      LOG("Calling drawCurrentTide for low tide\n");
+      LOG("Calling drawCurrentTide for last tide\n");
       drawCurrentTide(config.PosLastTide,false);
    }
 
    if(config.PosNextTide > 0) {
-      LOG("Calling drawCurrentTide for high tide\n");
+      LOG("Calling drawCurrentTide for next tide\n");
       drawCurrentTide(config.PosNextTide,true);
    }
    // end drawing left panel
