@@ -182,8 +182,8 @@ typedef struct {
    const char *TXT_INDOOR_TEMPERATURE;
    const char *TXT_INDOOR_HUMIDITY;
    const char *TXT_DEWPOINT;
-   const char *TXT_LOWTIDE;
-   const char *TXT_HIGHTIDE;
+   const char *TXT_LAST_TIDE;
+   const char *TXT_NEXT_TIDE;
    const char *TXT_MOONPHASE;
    const char *TXT_NEW_MOON;
    const char *TXT_WAXING_CRESCENT;
@@ -227,6 +227,13 @@ typedef struct {
    const char *TXT_UNITS_PRECIP_INCHES;
 } LocaleStrings_t;
 
+typedef enum
+{
+  BB_GRAPH,
+  BB_GRAPH_DATA
+} BoundingBoxType_t;
+
+
 class DrawOWM {
 public:
 #ifdef SEEED_GFX
@@ -238,14 +245,28 @@ public:
    const char *DrawIt();
    ~DrawOWM();
    static void LogAsciiBitMap(const uint8_t *Bitmap,int Size);
-
-private:
-#ifdef SEEED_GFX
-      EPaper &display;
-#else
-      TFT_eSprite &display;
+   void GetBB(BoundingBoxType_t type,int &xPos0,int &xPos1,int &yPos0,int &yPos1);
+   void drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color);
+   uint16_t getStringWidth(const String &text);
+   uint16_t getStringHeight(const String &text);
+   void drawString(int16_t x, int16_t y, const String &text,
+                   alignment_t alignment,uint16_t color=TFT_BLACK);
+#ifdef LOAD_GFXFF
+   void setFreeFont(const GFXfont *f);
 #endif
 
+#ifdef SEEED_GFX
+   EPaper &display;
+#else
+   TFT_eSprite &display;
+#endif
+
+#ifdef LOAD_GFXFF
+   const GFXfont *LabelFont;
+   const GFXfont *ValueFont;
+#endif
+
+private:
       OwmConfig &config;
 #ifndef OWM_USE_BITMAPS
       truetypeClass IconTT;
@@ -261,10 +282,6 @@ private:
 #endif
 
       void drawInit();
-      uint16_t getStringWidth(const String &text);
-      uint16_t getStringHeight(const String &text);
-      void drawString(int16_t x, int16_t y, const String &text,
-                      alignment_t alignment,uint16_t color=TFT_BLACK);
       void drawMultiLnString(int16_t x, int16_t y, const String &text,
                        alignment_t alignment, uint16_t max_width,
                        uint16_t max_lines, int16_t line_spacing,
@@ -309,13 +326,9 @@ private:
                          int16_t *y1,uint16_t *w,uint16_t *h);
       int kelvin_to_plot_y(float kelvin, int tempBoundMin, float yPxPerUnit,
                            int yBoundMin);
-#ifdef LOAD_GFXFF
-      void setFreeFont(const GFXfont *f);
-#endif
       void setCursor(int16_t x, int16_t y);
       int16_t getCursorX(void);
       int16_t getCursorY(void);
-      void drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color);
       void drawPixel(int32_t x, int32_t y, uint32_t color);
       void getRefreshTimeStr(String &s, bool timeSuccess, tm *timeInfo);
       const char *getUVIdesc(unsigned int uvi);
@@ -383,8 +396,6 @@ private:
   uint16_t WI_DDY;
 
 #ifdef LOAD_GFXFF
-  const GFXfont *LabelFont;
-  const GFXfont *ValueFont;
   const GFXfont *CurrentFont;
 #endif
   uint16_t MaxX;
@@ -446,8 +457,8 @@ private:
    const char *TXT_INDOOR_TEMPERATURE;
    const char *TXT_INDOOR_HUMIDITY;
    const char *TXT_DEWPOINT;
-   const char *TXT_LOWTIDE;
-   const char *TXT_HIGHTIDE;
+   const char *TXT_LAST_TIDE;
+   const char *TXT_NEXT_TIDE;
 // MOON PHASE
    const char *TXT_MOONPHASE;
    const char *TXT_NEW_MOON;
@@ -502,6 +513,8 @@ private:
    const char *TXT_UNITS_PRECIP_INCHES;
 // MISCELLANEOUS MESSAGES
    const char *TXT_UNKNOWN;
+
+   int xPosGraph;
 };
 
 #endif   // _DRAW_OWM_H_

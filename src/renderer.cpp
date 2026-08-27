@@ -1134,7 +1134,7 @@ void DrawOWM::drawCurrentTide(int8_t Position,bool bNextTide)
    int PosY = static_cast<int>(Position / 2);
    const unsigned char *IconBitmap = NULL;
    icon_name_t Icon;
-   String Type;
+   String Type = bNextTide ? TXT_NEXT_TIDE : TXT_LAST_TIDE;
    time_t ts;
 
    LOG("bNextTide %d\n",bNextTide);
@@ -1145,14 +1145,12 @@ void DrawOWM::drawCurrentTide(int8_t Position,bool bNextTide)
    // Next tide is low tide
       LOG("Next tide is low tide\n");
       Icon = bNextTide ? low_tide_icon : high_tide_icon;
-      Type = bNextTide ? TXT_LOWTIDE : TXT_HIGHTIDE;
       ts = bNextTide ? config.LowTide : config.HighTide;
    }
    else {
    // Next tide is high tide
       LOG("Next tide is high tide\n");
       Icon = bNextTide ? high_tide_icon : low_tide_icon;
-      Type = bNextTide ? TXT_HIGHTIDE : TXT_LOWTIDE;
       ts = bNextTide ? config.HighTide : config.LowTide;
    }
 
@@ -1723,6 +1721,35 @@ int DrawOWM::kelvin_to_plot_y(float kelvin, int tempBoundMin, float yPxPerUnit,
   }
 }
 
+void DrawOWM::GetBB(BoundingBoxType_t Type,int &xPos0,int &xPos1,int &yPos0,int &yPos1)
+{
+   switch(Type) {
+      case BB_GRAPH:
+         xPos1 = config.DisplayWidth;
+
+         switch (config.DisplayFormat) {
+            case FORMAT_400X300:
+               xPos0 = 198;
+               yPos0 = 108;
+               yPos1 = config.DisplayHeight - 19 - 23;
+               break;
+
+            case FORMAT_640X384:
+            case FORMAT_800X480:
+               xPos0 = 350;
+               yPos0 = 216;
+               yPos1 = config.DisplayHeight - 46;
+               break;
+         }
+         break;
+
+      case BB_GRAPH_DATA:
+         GetBB(BB_GRAPH,xPos0,xPos1,yPos0,yPos1);
+         xPos1 = xPosGraph;
+         break;
+   }
+}
+
 /* This function is responsible for drawing the outlook graph for the specified
  * number of hours(up to 48).
  */
@@ -1738,24 +1765,11 @@ void DrawOWM::drawOutlookGraph(
   const char *HourFormat = HOUR_FORMAT;
 
   LOG("\n");
-  switch (config.DisplayFormat) {
-     case FORMAT_400X300:
-        xPos0 = 198;
-        yPos0 = 108;
-        yPos1 = config.DisplayHeight - 19 - 23;
-     // no room for AM/PM
-        HourFormat = "%l";
-        break;
+  GetBB(BB_GRAPH,xPos0,xPos1,yPos0,yPos1);
 
-     case FORMAT_640X384:
-     // no room for AM/PM
-        HourFormat = "%l";
-     // Intentional fall though to FORMAT_800X480
-     case FORMAT_800X480:
-        xPos0 = 350;
-        yPos0 = 216;
-        yPos1 = config.DisplayHeight - 46;
-        break;
+  if(config.DisplayFormat != FORMAT_800X480) {
+  // no room for AM/PM
+     HourFormat = "%l";
   }
 
   // draw x tick marks
@@ -1894,6 +1908,7 @@ void DrawOWM::drawOutlookGraph(
   }
 
   // draw x axis
+  xPosGraph = xPos1;
   drawLine(xPos0, yPos1    , xPos1, yPos1    , TFT_BLACK);
   drawLine(xPos0, yPos1 - 1, xPos1, yPos1 - 1, TFT_BLACK);
 
