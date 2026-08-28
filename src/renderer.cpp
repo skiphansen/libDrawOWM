@@ -1134,23 +1134,25 @@ void DrawOWM::drawCurrentTide(int8_t Position,bool bNextTide)
    int PosY = static_cast<int>(Position / 2);
    const unsigned char *IconBitmap = NULL;
    icon_name_t Icon;
-   String Type = bNextTide ? TXT_NEXT_TIDE : TXT_LAST_TIDE;
+   String Type;
    time_t ts;
 
    LOG("bNextTide %d\n",bNextTide);
    LOG("Low tide @ %s",ctime((time_t *) &config.LowTide));
    LOG("Hight tide @ %s",ctime((time_t *) &config.HighTide));
 
-   if(config.LowTide > config.HighTide) {
+   if(config.LowTide < config.HighTide) {
    // Next tide is low tide
       LOG("Next tide is low tide\n");
       Icon = bNextTide ? low_tide_icon : high_tide_icon;
+      Type = bNextTide ? TXT_LOWTIDE : TXT_HIGHTIDE;
       ts = bNextTide ? config.LowTide : config.HighTide;
    }
    else {
    // Next tide is high tide
       LOG("Next tide is high tide\n");
       Icon = bNextTide ? high_tide_icon : low_tide_icon;
+      Type = bNextTide ? TXT_HIGHTIDE : TXT_LOWTIDE;
       ts = bNextTide ? config.HighTide : config.LowTide;
    }
 
@@ -1377,14 +1379,14 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
       drawCurrentDewpoint(current);
    }
 
-   if(config.PosLastTide > 0) {
-      LOG("Calling drawCurrentTide for last tide\n");
-      drawCurrentTide(config.PosLastTide,false);
+   if(config.PosTide1 > 0) {
+      LOG("Calling drawCurrentTide for next tide\n");
+      drawCurrentTide(config.PosTide1,true);
    }
 
-   if(config.PosNextTide > 0) {
-      LOG("Calling drawCurrentTide for next tide\n");
-      drawCurrentTide(config.PosNextTide,true);
+   if(config.PosTide2 > 0) {
+      LOG("Calling drawCurrentTide for tide after next\n");
+      drawCurrentTide(config.PosTide2,false);
    }
    // end drawing left panel
 } // end drawCurrentConditions
@@ -2076,7 +2078,7 @@ void DrawOWM::drawOutlookGraph(
     {
       for (int x = x0_t + (x0_t % 2); x < x1_t; x += 2)
       {
-        drawPixel(x, y, TFT_BLACK);
+        drawPixel(x, y, config.RainGraphColor);
       }
     }
 

@@ -135,8 +135,9 @@ typedef struct {
    int8_t PosMoonset;
    int8_t PosMoonphase;
    int8_t PosDewpoint;
-   int8_t PosLastTide;
-   int8_t PosNextTide;
+   int8_t PosTide1;
+   int8_t PosTide2;
+   uint32_t RainGraphColor;
    uint16_t DisplayWidth;
    uint16_t DisplayHeight;
    int16_t xOffset;
@@ -182,8 +183,8 @@ typedef struct {
    const char *TXT_INDOOR_TEMPERATURE;
    const char *TXT_INDOOR_HUMIDITY;
    const char *TXT_DEWPOINT;
-   const char *TXT_LAST_TIDE;
-   const char *TXT_NEXT_TIDE;
+   const char *TXT_LOWTIDE;
+   const char *TXT_HIGHTIDE;
    const char *TXT_MOONPHASE;
    const char *TXT_NEW_MOON;
    const char *TXT_WAXING_CRESCENT;
@@ -457,8 +458,8 @@ private:
    const char *TXT_INDOOR_TEMPERATURE;
    const char *TXT_INDOOR_HUMIDITY;
    const char *TXT_DEWPOINT;
-   const char *TXT_LAST_TIDE;
-   const char *TXT_NEXT_TIDE;
+   const char *TXT_LOWTIDE;
+   const char *TXT_HIGHTIDE;
 // MOON PHASE
    const char *TXT_MOONPHASE;
    const char *TXT_NEW_MOON;
