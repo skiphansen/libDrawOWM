@@ -1996,6 +1996,52 @@ void DrawOWM::drawOutlookGraph(
     int xTick = static_cast<int>(xPos0 + (i * xInterval));
     int x0_t, x1_t, y0_t, y1_t;
 
+ // Draw precipitation before rain, it's a bar graph
+    float precipVal = hourly[i].rain_1h + hourly[i].snow_1h;
+
+    switch(config.PrecipHrType) {
+       case UNITS_HOURLY_PRECIP_POP:
+          precipVal = hourly[i].pop * 100;
+          break;
+
+       case UNITS_HOURLY_PRECIP_CENTIMETERS:
+          precipVal = millimeters_to_centimeters(precipVal);
+          break;
+
+       case UNITS_HOURLY_PRECIP_INCHES:
+          precipVal = millimeters_to_inches(precipVal);
+          break;
+
+       case UNITS_HOURLY_PRECIP_MILLIMETERS:
+          break;
+    }
+
+    x0_t = static_cast<int>(std::round( xPos0 + 1 + (i * xInterval)));
+    x1_t = static_cast<int>(std::round( xPos0 + 1 + ((i + 1) * xInterval) ));
+    yPxPerUnit = (yPos1 - yPos0) / precipBoundMax;
+    y0_t = static_cast<int>(std::round( yPos1 - (yPxPerUnit * (precipVal)) ));
+    y1_t = yPos1;
+
+  // graph Precipitation
+    if(!config.RainGraphSolid) {
+       for (int y = y1_t - 1; y > y0_t; y -= 2)
+       {
+         for (int x = x0_t + (x0_t % 2); x < x1_t; x += 2)
+         {
+           drawPixel(x, y, config.RainGraphColor);
+         }
+       }
+    }
+    else {
+       for (int y = y1_t - 2; y > y0_t; y--)
+       {
+         for (int x = x0_t + (x0_t % 2); x <= x1_t; x++)
+         {
+           drawPixel(x, y, config.RainGraphColor);
+         }
+       }
+    }
+
     if (i > 0)
     {
       // temperature
@@ -2048,39 +2094,6 @@ void DrawOWM::drawOutlookGraph(
 #endif
     }
 
-    float precipVal = hourly[i].rain_1h + hourly[i].snow_1h;
-
-    switch(config.PrecipHrType) {
-       case UNITS_HOURLY_PRECIP_POP:
-          precipVal = hourly[i].pop * 100;
-          break;
-
-       case UNITS_HOURLY_PRECIP_CENTIMETERS:
-          precipVal = millimeters_to_centimeters(precipVal);
-          break;
-
-       case UNITS_HOURLY_PRECIP_INCHES:
-          precipVal = millimeters_to_inches(precipVal);
-          break;
-
-       case UNITS_HOURLY_PRECIP_MILLIMETERS:
-          break;
-    }
-
-    x0_t = static_cast<int>(std::round( xPos0 + 1 + (i * xInterval)));
-    x1_t = static_cast<int>(std::round( xPos0 + 1 + ((i + 1) * xInterval) ));
-    yPxPerUnit = (yPos1 - yPos0) / precipBoundMax;
-    y0_t = static_cast<int>(std::round( yPos1 - (yPxPerUnit * (precipVal)) ));
-    y1_t = yPos1;
-
-    // graph Precipitation
-    for (int y = y1_t - 1; y > y0_t; y -= 2)
-    {
-      for (int x = x0_t + (x0_t % 2); x < x1_t; x += 2)
-      {
-        drawPixel(x, y, config.RainGraphColor);
-      }
-    }
 
     if ((i % hourInterval) == 0)
     {
@@ -2094,7 +2107,6 @@ void DrawOWM::drawOutlookGraph(
       _strftime(timeBuffer, sizeof(timeBuffer), HourFormat, timeInfo);
       drawString(xTick, yPos1 + 1 + 12 + 4 + 3, timeBuffer, CENTER);
     }
-
   }
 
   // draw the last tick mark

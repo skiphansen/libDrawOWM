@@ -137,6 +137,7 @@ typedef struct {
    int8_t PosDewpoint;
    int8_t PosTide1;
    int8_t PosTide2;
+   int8_t RainGraphSolid;
    uint32_t RainGraphColor;
    uint16_t DisplayWidth;
    uint16_t DisplayHeight;
