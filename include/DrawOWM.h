@@ -11,7 +11,7 @@
    #define USING_TTF
    #include <FS.h>
    using namespace fs;
-   #include <truetype.h>
+   #include <TinyTTF.h>
 #endif
 
 typedef enum alignment
@@ -271,9 +271,9 @@ public:
 private:
       OwmConfig &config;
 #ifndef OWM_USE_BITMAPS
-      truetypeClass IconTT;
-      truetypeClass OwmIconTT;
-      truetypeClass TextTT;
+      TinyTTF IconTT;
+      TinyTTF OwmIconTT;
+      TinyTTF TextTT;
       File IconFile;
       File OwmIconFile;
       #define TTF_CACHE_SIZE  4

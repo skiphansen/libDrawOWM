@@ -875,7 +875,7 @@ const unsigned char* DrawOWM::getBitmapInternal(int icon, size_t size)
 {
    wchar_t Icons[2] = {(wchar_t) icon,0};
    int malloc_size = size * ((size + 7) / 8);
-   truetypeClass *IconsTT;
+   TinyTTF *IconsTT;
    int ScalledSize = size;
    uint16_t x0 = 0;
 
