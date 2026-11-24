@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <cinttypes>
 #include <cmath>
 #include <vector>
 #include <Arduino.h>
@@ -98,7 +99,7 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv,bool bLiPo)
       }
    }
 
-   LOG("bLiPo %d, v %d  = %d%%\n",bLiPo,v,Ret);
+   LOG("bLiPo %d, v %" PRIu32 "  = %" PRIu32 "%%\n",bLiPo,v,Ret);
    return Ret;
 } // end calcBatPercent
 
@@ -177,7 +178,7 @@ const uint8_t *DrawOWM::getBatBitmap(int BitmapSize,uint32_t batPercent)
    uint16_t BatteryIcon;
 
    if(index < 0 || index > 7) {
-      ELOG("Invalid index, batPercent %d -> index %d\n",batPercent,index);
+      ELOG("Invalid index, batPercent %" PRIu32 " -> index %d\n",batPercent,index);
       index = 0;
    }
    BatteryIcon = battery_icon_arr[index];

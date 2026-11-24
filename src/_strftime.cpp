@@ -503,7 +503,7 @@ size_t DrawOWM::_strftime(char *s, size_t maxsize, const char *format,
       struct tm non_const_timeptr;
 
       non_const_timeptr = *timeptr;
-      sprintf(tbuf, "%ld", mktime(&non_const_timeptr));
+      sprintf(tbuf, "%lld", (long long) mktime(&non_const_timeptr));
       break;
     }
 

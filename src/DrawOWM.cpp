@@ -159,7 +159,9 @@ const char *DrawOWM::DrawIt()
 
    do {
 #ifndef OWM_USE_BITMAPS
+#if defined(TTF_PATH_WEATHER_ICONS) || defined(TTF_PATH_OWM_ICONS)
       uint8_t Err;
+#endif
 #ifdef TTF_PATH_WEATHER_ICONS
       IconFile = LittleFS.open(TTF_PATH_WEATHER_ICONS,"r");
       if ((Err = IconTT.setTtfFile(IconFile)) == 0) {

@@ -1841,7 +1841,7 @@ void DrawOWM::drawOutlookGraph(
     }
   }
 
-  int yPrecipMajorTickDecimals;
+  int yPrecipMajorTickDecimals = 0;
   float precipBoundMax = 0.0f;
   switch(config.PrecipHrType) {
       case UNITS_HOURLY_PRECIP_POP:
