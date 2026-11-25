@@ -127,6 +127,17 @@ DrawOWM::DrawOWM(TFT_eSprite &epaper,OwmConfig &Config)
 #ifndef OWM_USE_BITMAPS
    memset(ttfBitmaps,0,sizeof(ttfBitmaps));
 #endif
+#ifdef OWM_HAVE_FONTS
+   CurrentFont = NULL;
+#endif
+#ifdef OWM_USE_TTF_TEXT
+   TextUnitsPerEm = 0;
+   TextAscender = 0;
+   TextDescender = 0;
+   TextLineGap = 0;
+   TextCursorX = 0;
+   TextCursorY = 0;
+#endif
 }
 
 DrawOWM::~DrawOWM()
@@ -144,10 +155,82 @@ DrawOWM::~DrawOWM()
    OwmIconTT.end();
 #endif
 
-#ifdef TTF_PATH_TEXT
+#ifdef OWM_USE_TTF_TEXT
    TextTT.end();
+   if(pTextOwner == this) {
+      pTextOwner = NULL;
+   }
 #endif
 }
+
+#ifdef OWM_USE_TTF_TEXT
+static uint16_t GetU16(const uint8_t *p)
+{
+   return (p[0] << 8) | p[1];
+}
+
+/* Loads the TrueType font used for text and reads the font wide metrics
+ * TinyTTF doesn't expose which are needed to position text by its baseline.
+ */
+bool DrawOWM::loadTextFont()
+{
+   uint8_t Buf[16];
+   uint32_t HeadOffset = 0;
+   uint32_t HheaOffset = 0;
+
+#ifdef TTF_PATH_FONT
+   if(!TextTT.setTtfFile(LittleFS.open(TTF_PATH_FONT,"r"))) {
+      ELOG("Couldn't load %s\n",TTF_PATH_FONT);
+      return false;
+   }
+#else
+   if(!TextTT.setTtfPointer((uint8_t *) binaryttf,sizeof(binaryttf))) {
+      ELOG("setTtfPointer failed\n");
+      return false;
+   }
+#endif   // TTF_PATH_FONT
+   TextTT.setTextRotation(0);
+   TextTT.setTtfDrawPixel(ttfTextPixel);
+
+// Find the head and hhea tables in the table directory
+   TextTT.ttfSeek(4);
+   TextTT.ttfRead(Buf,2);
+   uint16_t NumTables = GetU16(Buf);
+   for(uint16_t i = 0; i < NumTables; i++) {
+      TextTT.ttfSeek(12 + 16 * i);
+      if(TextTT.ttfRead(Buf,16) != 16) {
+         break;
+      }
+      uint32_t Offset = ((uint32_t) GetU16(&Buf[8]) << 16) | GetU16(&Buf[10]);
+      if(memcmp(Buf,"head",4) == 0) {
+         HeadOffset = Offset;
+      }
+      else if(memcmp(Buf,"hhea",4) == 0) {
+         HheaOffset = Offset;
+      }
+   }
+
+   TextUnitsPerEm = 0;
+   if(HeadOffset != 0 && HheaOffset != 0) {
+      TextTT.ttfSeek(HeadOffset + 18);
+      TextTT.ttfRead(Buf,2);
+      TextUnitsPerEm = GetU16(Buf);
+      TextTT.ttfSeek(HheaOffset + 4);
+      TextTT.ttfRead(Buf,6);
+      TextAscender = (int16_t) GetU16(&Buf[0]);
+      TextDescender = (int16_t) GetU16(&Buf[2]);
+      TextLineGap = (int16_t) GetU16(&Buf[4]);
+   }
+   if(TextUnitsPerEm == 0) {
+      ELOG("Couldn't read text font metrics\n");
+      TextTT.end();
+      return false;
+   }
+   LOG("unitsPerEm %u ascender %d descender %d lineGap %d\n",TextUnitsPerEm,
+       TextAscender,TextDescender,TextLineGap);
+   return true;
+}
+#endif   // OWM_USE_TTF_TEXT
 
 const char *DrawOWM::DrawIt()
 {
@@ -192,6 +275,11 @@ const char *DrawOWM::DrawIt()
 #endif   // TTF_PATH_OWM_ICONS
       OwmIconTT.setTextRotation(0);
 #endif   // OWM_USE_BITMAPS
+#ifdef OWM_USE_TTF_TEXT
+      if(!loadTextFont()) {
+         break;
+      }
+#endif
 
       deserializeOneCall(config.ForecastApiResponse,owm_onecall,
                          config.bDisplayAlerts);

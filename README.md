@@ -60,6 +60,29 @@ conditional compile variables
 | TTF_PATH_WEATHER_ICONS | full path to erikflower's weather Icons TTF file<br>For example /fonts/weathericons-regular-webfont.ttf|
 | TTF_PATH_OWM_ICONS | full path to owm_icons.ttf |
 | OWM_USE_BITMAPS | if set the original esp32-weaher-epd bitmaps are used rather than the TTF versions |
+| OWM_USE_TTF_TEXT | if set text is rendered from a TrueType font rather than the GFX bitmap fonts.<br>LOAD_GFXFF is not required. |
+| TTF_PATH_FONT | full path to the TTF file used for text when OWM_USE_TTF_TEXT is set<br>For example /fonts/FreeSans.ttf.  If not set the embedded FreeSans font is used. |
+
+The TTF files are in the data directory.
+
+### TrueType text
+
+By default text is drawn with the GFX FreeSans bitmap fonts the original
+project used.  When OWM_USE_TTF_TEXT is set text is drawn by TinyTTF instead,
+which uses about 80K bytes less flash with the embedded font, and about 100K
+bytes less when the font is read from the filesystem.
+
+* The layout uses the same font sizes and baselines as the GFX fonts.  Small
+sizes render a few percent narrower because TinyTTF rounds each character's
+width down to a whole pixel.
+* Strings are decoded as UTF-8 where they are valid UTF-8, any other byte is
+taken as a Latin-1 character as it was by the 8 bit GFX fonts, so
+existing strings such as "\260C" (°C) continue to work.
+* The embedded FreeSans font contains Latin-1 plus a few common symbols
+(€, curly quotes, etc).  Use TTF_PATH_FONT to supply a font with other
+characters.
+* setFreeFont() also accepts a GFX font when LOAD_GFXFF is set, the TrueType
+size with the same line spacing is used.
 
 
 

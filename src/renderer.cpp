@@ -36,7 +36,11 @@
 
 
 // fonts
+#ifdef OWM_USE_TTF_TEXT
+#include "fonts/FreeSansTTF.h"
+#else
 #include FONT_HEADER
+#endif
 
 // icon header files
 #include "icons/icons.h"
@@ -45,33 +49,123 @@
   #define ACCENT_COLOR TFT_BLACK
 #endif
 
+#ifdef OWM_USE_TTF_TEXT
+DrawOWM *DrawOWM::pTextOwner = NULL;
+
+/* Converts a string to the UTF-16 characters TinyTTF draws.
+ * Valid UTF-8 sequences are decoded, any other byte is taken as a Latin-1
+ * character. This matches how the 8 bit GFX fonts interpret strings
+ * (i.e. "\260" is the degree sign) while also allowing UTF-8 locale strings.
+ */
+void DrawOWM::toWide(const String &str,std::vector<wchar_t> &Wide)
+{
+   const uint8_t *p = (const uint8_t *) str.c_str();
+
+   Wide.clear();
+   while(*p) {
+      uint32_t c = *p;
+      int Len = 0;
+      if(c >= 0xc2 && c <= 0xdf) {
+         Len = 1;
+         c &= 0x1f;
+      }
+      else if(c >= 0xe0 && c <= 0xef) {
+         Len = 2;
+         c &= 0x0f;
+      }
+      else if(c >= 0xf0 && c <= 0xf4) {
+         Len = 3;
+         c &= 0x07;
+      }
+      int i;
+      for(i = 1; i <= Len; i++) {
+         if((p[i] & 0xc0) != 0x80) {
+            break;
+         }
+         c = (c << 6) | (p[i] & 0x3f);
+      }
+      if(i <= Len) {
+      // Not a valid UTF-8 sequence, treat the byte as Latin-1
+         c = *p;
+         Len = 0;
+      }
+      p += Len + 1;
+      if(c > 0xffff) {
+      // TinyTTF only supports the Basic Multilingual Plane
+         c = '?';
+      }
+      Wide.push_back((wchar_t) c);
+   }
+   Wide.push_back(0);
+}
+
+// TinyTTF pixel callback, coordinates are relative to the layout
+void DrawOWM::ttfTextPixel(int16_t x, int16_t y, uint16_t color)
+{
+   pTextOwner->drawPixel(x,y,color);
+}
+
+// Distance between lines of text, the equivalent of GFX's yAdvance
+uint16_t DrawOWM::ttfLineHeight()
+{
+   if(CurrentFont == NULL || TextUnitsPerEm == 0) {
+      return 0;
+   }
+   int32_t LineUnits = TextAscender - TextDescender + TextLineGap;
+   return (LineUnits * CurrentFont->Size + TextUnitsPerEm / 2) / TextUnitsPerEm;
+}
+#endif   // OWM_USE_TTF_TEXT
+
 /* Returns the string width in pixels
  */
 uint16_t DrawOWM::getStringWidth(const String &text)
 {
+#ifdef OWM_USE_TTF_TEXT
+  std::vector<wchar_t> Wide;
+  toWide(text,Wide);
+  return TextTT.getStringWidth(Wide.data());
+#else
   return display.textWidth(text);
+#endif
 }
 
 /* Returns the string height in pixels
  */
 uint16_t DrawOWM::getStringHeight(const String &text)
 {
+#ifdef OWM_USE_TTF_TEXT
+  return ttfLineHeight();
+#else
   return display.fontHeight();
+#endif
 }
 
 void DrawOWM::setCursor(int16_t x, int16_t y)
 {
+#ifdef OWM_USE_TTF_TEXT
+   TextCursorX = x;
+   TextCursorY = y;
+#else
    display.setCursor(x + config.xOffset,y + config.yOffset);
+#endif
 }
 
 int16_t DrawOWM::getCursorX(void)
 {
+#ifdef OWM_USE_TTF_TEXT
+   return TextCursorX;
+#else
    return display.getCursorX() - config.xOffset;
+#endif
 }
 
 int16_t DrawOWM::getCursorY(void)
 {
+#ifdef OWM_USE_TTF_TEXT
+   return TextCursorY;
+#else
    return display.getCursorY() - config.yOffset;
+#endif
 }
 
 void DrawOWM::drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color)
@@ -89,7 +183,13 @@ void DrawOWM::drawPixel(int32_t x, int32_t y, uint32_t color)
 void DrawOWM::drawString(int16_t x, int16_t y, const String &text, alignment_t alignment,
                 uint16_t color)
 {
+#ifdef OWM_USE_TTF_TEXT
+  std::vector<wchar_t> Wide;
+  toWide(text,Wide);
+  uint16_t w = TextTT.getStringWidth(Wide.data());
+#else
   uint16_t w = display.textWidth(text);
+#endif
   if (alignment == RIGHT)
   {
     x = x - w;
@@ -98,15 +198,30 @@ void DrawOWM::drawString(int16_t x, int16_t y, const String &text, alignment_t a
   {
     x = x - w / 2;
   }
+#ifdef OWM_USE_TTF_TEXT
+  if(CurrentFont != NULL && TextUnitsPerEm != 0) {
+  // Like GFX fonts y is the baseline: the bottom row of a glyph sitting on
+  // the baseline is drawn on row y. TinyTTF positions the top of the line
+  // (the font's ascender) at the y it's passed and fills pixels whose center
+  // is inside the outline, so the baseline must fall in (y + 0.5, y + 1.5].
+     float Ascent = (float) TextAscender * CurrentFont->Size / TextUnitsPerEm;
+     int16_t Top = y + (int16_t) floorf(1.5f - Ascent);
+     pTextOwner = this;
+     TextTT.setTextColor(color,color);
+     TextTT.textDraw(x,Top,Wide.data());
+  }
+  setCursor(x + w, y);
+#else
   setCursor(x, y);
   display.setTextColor(color);
   display.print(text);
+#endif
   x = getCursorX();
   if(MaxX < x) {
      MaxX = x;
      LOG("New MaxX \"%s\" %d\n",text.c_str(),MaxX);
   }
-  y += display.fontHeight();
+  y += getStringHeight(text);
   if(MaxY < y) {
      MaxY = y;
      LOG("New MaxY \"%s\" %d\n",text.c_str(),MaxY);
@@ -132,7 +247,7 @@ void DrawOWM::drawMultiLnString(int16_t x, int16_t y, const String &text,
   // print until we reach max_lines or no more text remains
   while (current_line < max_lines && !textRemaining.isEmpty())
   {
-    uint16_t w = display.textWidth(textRemaining);
+    uint16_t w = getStringWidth(textRemaining);
 
     int endIndex = textRemaining.length();
     // check if remaining text is to wide, if it is then print what we can
@@ -185,13 +300,13 @@ void DrawOWM::drawMultiLnString(int16_t x, int16_t y, const String &text,
         if (current_line < max_lines - 1)
         {
           // this is not the last line
-          w = display.textWidth(subStr);
+          w = getStringWidth(subStr);
         }
         else
         {
           // this is the last line, we need to make sure there is space for
           // ellipsis
-          w = display.textWidth(subStr + "...");
+          w = getStringWidth(subStr + "...");
           if (w <= max_width)
           {
             // ellipsis fit, add them to subStr
@@ -360,7 +475,7 @@ void DrawOWM::drawCurrentWind(const owm_current_t &current)
 #else
   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY, dataStr, LEFT);
 #endif
-  const GFXfont *temp;
+  const OwmFont_t *temp;
   temp = config.DisplayWidth >= 640 ? &FONT_8pt8b : &FONT_5pt8b;
   setFreeFont(temp);
   drawString(getCursorX(),WI_Y0 + WI_DDY + WI_DY * PosY,unitStr,LEFT);
@@ -426,7 +541,7 @@ void DrawOWM::drawCurrentUVI(const owm_current_t &current)
                                 std::max(std::round(current.uvi), 0.0f));
   dataStr = String(uvi);
   drawString(WI_LOFF + (WI_COL * PosX), WI_Y0 + WI_DDY + WI_DY * PosY, dataStr, LEFT);
-  const GFXfont *temp = config.DisplayWidth >= 640 ? &FONT_7pt8b : &FONT_5pt8b;
+  const OwmFont_t *temp = config.DisplayWidth >= 640 ? &FONT_7pt8b : &FONT_5pt8b;
   // spacing between end of index value and start of descriptor text
   const int sp = config.DisplayWidth >= 640 ? 8 : 2;
   setFreeFont(temp);
@@ -464,7 +579,7 @@ void DrawOWM::drawCurrentAirQuality(const owm_resp_air_pollution_t &owm_air_poll
   int PosX = (config.PosAirQuality % 2);
   int PosY = static_cast<int>(config.PosAirQuality / 2);
   const unsigned char *IconBitmap = NULL;
-  const GFXfont *TempFont;
+  const OwmFont_t *TempFont;
 
     // icons
 #ifdef OWM_USE_BITMAPS
@@ -652,7 +767,7 @@ void DrawOWM::drawCurrentHumidity(const owm_current_t &current)
   int PosX = (config.PosHumidity % 2);
   int PosY = static_cast<int>(config.PosHumidity / 2);
   const unsigned char *IconBitmap = NULL;
-  const GFXfont *TempFont;
+  const OwmFont_t *TempFont;
 
     // icons
 #ifdef OWM_USE_BITMAPS
@@ -696,7 +811,7 @@ void DrawOWM::drawCurrentPressure(const owm_current_t &current)
   String dataStr, unitStr;
   int PosX = (config.PosPressure % 2);
   int PosY = static_cast<int>(config.PosPressure / 2);
-  const GFXfont *TempFont;
+  const OwmFont_t *TempFont;
   const unsigned char *IconBitmap = NULL;
 
     // icons
@@ -792,7 +907,7 @@ void DrawOWM::drawCurrentVisibility(const owm_current_t &current)
   int PosX = (config.PosVisibility % 2);
   int PosY = static_cast<int>(config.PosVisibility / 2);
   const unsigned char *IconBitmap = NULL;
-  const GFXfont *TempFont;
+  const OwmFont_t *TempFont;
 
     // icons
 #ifdef OWM_USE_BITMAPS
@@ -861,7 +976,7 @@ void DrawOWM::drawCurrentInHumidity(float inHumidity)
   int PosX = (config.PosInhumidity % 2);
   int PosY = static_cast<int>(config.PosInhumidity / 2);
   const unsigned char *IconBitmap = NULL;
-  const GFXfont *TempFont;
+  const OwmFont_t *TempFont;
 
     // icons
 #ifdef OWM_USE_BITMAPS
@@ -998,7 +1113,7 @@ void DrawOWM::drawCurrentMoonphase(const owm_daily_t &daily)
   int PosX = (config.PosMoonphase % 2);
   int PosY = static_cast<int>(config.PosMoonphase / 2);
   const unsigned char *IconBitmap = NULL;
-  const GFXfont *TempFont;
+  const OwmFont_t *TempFont;
 
     // icons
 #ifdef OWM_USE_BITMAPS
@@ -1218,8 +1333,8 @@ void DrawOWM::drawCurrentConditions(const owm_current_t &current,
 {
    String dataStr, unitStr;
    // current weather icon
-   const GFXfont *TemperatureFont = NULL;
-   const GFXfont *UnitFont = NULL;
+   const OwmFont_t *TemperatureFont = NULL;
+   const OwmFont_t *UnitFont = NULL;
    const uint8_t *IconBitmap = NULL;
    uint16_t TempX = 0;
    uint16_t TempY = 0;
@@ -1399,7 +1514,7 @@ void DrawOWM::drawForecast(const owm_daily_t *daily, tm timeInfo) {
    String dataStr, unitStr;
    const unsigned char *IconBitmap = NULL;
    uint16_t DailyWI_SZ = 0;
-   const GFXfont *TempFont;
+   const OwmFont_t *TempFont;
 #ifdef TEMP_ORDER_HL
    #define LeftStr  hiStr
    #define RightStr loStr
@@ -2296,6 +2411,46 @@ void DrawOWM::drawInvertedBitmap(int16_t x, int16_t y, const uint8_t bitmap[], i
 }
 
 // #define DEBUG_GET_HEIGHT
+#ifdef OWM_USE_TTF_TEXT
+/* Returns the height of the tallest and deepest characters in str.
+ * As with GFX fonts the baseline row is counted as below the baseline.
+ */
+uint16_t DrawOWM::getTextHeight(const String &str,uint16_t *pBelow)
+{
+   int glyph_ab = 0;
+   int glyph_bb = 0;
+   std::vector<wchar_t> Wide;
+
+   if(CurrentFont != NULL && TextUnitsPerEm != 0) {
+      float Scale = (float) CurrentFont->Size / TextUnitsPerEm;
+      toWide(str,Wide);
+      for(const wchar_t *p = Wide.data(); *p != 0; p++) {
+         if(*p <= ' ') {
+         // No outline (and getMetrics() would return the next glyph's box)
+            continue;
+         }
+         ttMetrics_t Metrics;
+         TextTT.getMetrics(*p,&Metrics);
+         int ab = lroundf(Metrics.yMax * Scale) - 1;
+         int bb = lroundf(-Metrics.yMin * Scale) + 1;
+         if(ab > glyph_ab) {
+            glyph_ab = ab;
+         }
+         if(bb > glyph_bb) {
+            glyph_bb = bb;
+         }
+      }
+   }
+   if(pBelow != NULL) {
+      *pBelow = glyph_bb;
+   }
+#ifdef DEBUG_GET_HEIGHT
+   LOG("Height of \"%s\" is %d, %d below base\n",str.c_str(),
+       glyph_ab + glyph_bb,glyph_bb);
+#endif
+   return glyph_ab + glyph_bb;
+}
+#else
 uint16_t DrawOWM::getTextHeight(const String &str,uint16_t *pBelow)
 {
    uint8_t glyph_ab = 0;
@@ -2346,6 +2501,7 @@ uint16_t DrawOWM::getTextHeight(const String &str,uint16_t *pBelow)
 #endif
    return Ret;
 }
+#endif   // OWM_USE_TTF_TEXT
 
 /**************************************************************************/
 /*!
@@ -2363,18 +2519,43 @@ uint16_t DrawOWM::getTextHeight(const String &str,uint16_t *pBelow)
 void DrawOWM::getTextBounds(const String &str,int16_t x,int16_t y,int16_t *x1,
                              int16_t *y1,uint16_t *w,uint16_t *h)
 {
-   *w =  display.textWidth(str);
-   *h =  display.fontHeight();
+   *w =  getStringWidth(str);
+   *h =  getStringHeight(str);
    *x1 = x + *w;
    *y1 = y + *h;
 //   LOG("\"%s\" is %d x %d\n",str.c_str(),*w,*h);
 }
 
-#ifdef LOAD_GFXFF
-void DrawOWM::setFreeFont(const GFXfont *f)
+#ifdef OWM_HAVE_FONTS
+void DrawOWM::setFreeFont(const OwmFont_t *f)
 {
    CurrentFont = f;
+#ifdef OWM_USE_TTF_TEXT
+   TextTT.setCharacterSize(f->Size);
+#else
    display.setFreeFont(f);
+#endif
+}
+#endif
+
+#if defined(OWM_USE_TTF_TEXT) && defined(LOAD_GFXFF)
+/* Allows code written for GFX fonts to select a TrueType font of the same
+ * size.  A GFX font's yAdvance is its line spacing so the em size is
+ * yAdvance scaled by the TrueType font's em size / line spacing.
+ */
+void DrawOWM::setFreeFont(const GFXfont *f)
+{
+   int32_t LineUnits = TextAscender - TextDescender + TextLineGap;
+
+   if(TextUnitsPerEm != 0 && LineUnits > 0) {
+      GfxEquivalentFont.Size = (f->yAdvance * TextUnitsPerEm + LineUnits / 2)
+                               / LineUnits;
+   }
+   else {
+   // Font not loaded yet, assume the usual line spacing of 1.2 em
+      GfxEquivalentFont.Size = (f->yAdvance * 10 + 6) / 12;
+   }
+   setFreeFont(&GfxEquivalentFont);
 }
 #endif
 

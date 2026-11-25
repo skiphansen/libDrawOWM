@@ -6,12 +6,26 @@
 #include "config.h"
 #include "icons/icons.h"
 
-#ifndef OWM_USE_BITMAPS
+#if !defined(OWM_USE_BITMAPS) || defined(OWM_USE_TTF_TEXT)
    #include "LittleFS.h"
    #define USING_TTF
    #include <FS.h>
    using namespace fs;
    #include <TinyTTF.h>
+#endif
+
+// Text fonts
+// By default text is drawn using Adafruit GFX bitmap fonts (requires LOAD_GFXFF).
+// When OWM_USE_TTF_TEXT is defined text is rendered from a TrueType font:
+// the embedded FreeSans font, or the file named by TTF_PATH_FONT if defined.
+#ifdef OWM_USE_TTF_TEXT
+   typedef struct {
+      uint16_t Size;    // em size in pixels
+   } OwmFont_t;
+   #define OWM_HAVE_FONTS
+#elif defined(LOAD_GFXFF)
+   typedef GFXfont OwmFont_t;
+   #define OWM_HAVE_FONTS
 #endif
 
 typedef enum alignment
@@ -253,7 +267,11 @@ public:
    uint16_t getStringHeight(const String &text);
    void drawString(int16_t x, int16_t y, const String &text,
                    alignment_t alignment,uint16_t color=TFT_BLACK);
-#ifdef LOAD_GFXFF
+#ifdef OWM_HAVE_FONTS
+   void setFreeFont(const OwmFont_t *f);
+#endif
+#if defined(OWM_USE_TTF_TEXT) && defined(LOAD_GFXFF)
+// Select the TrueType size which matches a GFX font's line spacing
    void setFreeFont(const GFXfont *f);
 #endif
 
@@ -263,9 +281,9 @@ public:
    TFT_eSprite &display;
 #endif
 
-#ifdef LOAD_GFXFF
-   const GFXfont *LabelFont;
-   const GFXfont *ValueFont;
+#ifdef OWM_HAVE_FONTS
+   const OwmFont_t *LabelFont;
+   const OwmFont_t *ValueFont;
 #endif
 
 private:
@@ -273,7 +291,6 @@ private:
 #ifndef OWM_USE_BITMAPS
       TinyTTF IconTT;
       TinyTTF OwmIconTT;
-      TinyTTF TextTT;
       File IconFile;
       File OwmIconFile;
       #define TTF_CACHE_SIZE  4
@@ -281,6 +298,26 @@ private:
          uint8_t *BitMap;
          int CodePoint;
       } ttfBitmaps[TTF_CACHE_SIZE];
+#endif
+#ifdef OWM_USE_TTF_TEXT
+      TinyTTF TextTT;
+   // Font wide metrics read from the TTF file, in font units
+      uint16_t TextUnitsPerEm;
+      int16_t TextAscender;
+      int16_t TextDescender;
+      int16_t TextLineGap;
+   // Text cursor, GFX text drawing maintains this in the display
+      int16_t TextCursorX;
+      int16_t TextCursorY;
+      static DrawOWM *pTextOwner;
+#ifdef LOAD_GFXFF
+      OwmFont_t GfxEquivalentFont;
+#endif
+
+      bool loadTextFont();
+      static void ttfTextPixel(int16_t x, int16_t y, uint16_t color);
+      static void toWide(const String &str,std::vector<wchar_t> &Wide);
+      uint16_t ttfLineHeight();
 #endif
 
       void drawInit();
@@ -397,8 +434,8 @@ private:
 // data baseline delta from row base (5 + 24/2)
   uint16_t WI_DDY;
 
-#ifdef LOAD_GFXFF
-  const GFXfont *CurrentFont;
+#ifdef OWM_HAVE_FONTS
+  const OwmFont_t *CurrentFont;
 #endif
   uint16_t MaxX;
   uint16_t MaxY;

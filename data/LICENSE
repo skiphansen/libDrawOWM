@@ -8,3 +8,10 @@ owm_icons.ttf:
   Created by ../icons/create_owm_ttf.py see ../icons/svg/LICENSE, 
   ../material_svg/LICENSE, and ./online_web_fonts/License.txt for details
 
+
+FreeSans.ttf:
+  Subset of GNU FreeFont's FreeSans, the same font as the embedded text font
+  in ../include/icons/ttf_data.h.
+  Copyright 2002, 2003, 2005, 2008, 2009, 2010, 2012 GNU Freefont contributors.
+  Licensed under the GNU GPL v3 or later with the GPL font exception:
+  https://www.gnu.org/software/freefont/license.html
